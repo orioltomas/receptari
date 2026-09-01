@@ -2,6 +2,8 @@
 
 Aplicació per gestionar receptes de cuina. MVP amb CRUD de receptes (ingredients + passos + notes).
 
+> **Estat actual:** arrenca amb **PGlite** (Postgres WASM embegut, zero-config) per evitar bloquejos d'instal·lació a la màquina de desenvolupament. Veure [`docs/postgres-real-setup.md`](docs/postgres-real-setup.md) per la ruta de migració a Postgres real (via `brew install postgresql@16`) un cop s'actualitzi macOS / Xcode.
+
 ## Stack
 
 - **Monorepo** amb [pnpm](https://pnpm.io) workspaces
@@ -51,11 +53,9 @@ Aplicació per gestionar receptes de cuina. MVP amb CRUD de receptes (ingredient
 
 - **Node.js ≥ 22** (recomanat: `nvm use`)
 - **pnpm ≥ 10** (`npm i -g pnpm`)
-- ~~Docker~~ **No cal!** Per defecte el projecte arrenca amb PGlite (Postgres WASM embegut). Docker només és opcional si vols connectar a un Postgres real.
+- ~~Docker / Postgres~~ **No cal!** Per defecte el projecte arrenca amb PGlite (Postgres WASM embegut). Veure [`docs/postgres-real-setup.md`](docs/postgres-real-setup.md) per la ruta de migració a Postgres real.
 
-## Posada en marxa (PGlite — recomanat)
-
-Zero dependències externes. La DB és un fitxer local a `./apps/api/data/receptari`.
+## Posada en marxa (PGlite — actual)
 
 ### 1. Instal·la dependències
 
@@ -96,6 +96,8 @@ pnpm dev
 > Si vols canviar el port de la web: `PORT=3001 pnpm --filter @receptari/web dev`.
 
 ## Posada en marxa (Postgres real via Docker — opcional)
+
+> Veure [`docs/postgres-real-setup.md`](docs/postgres-real-setup.md) per la ruta completa via `brew install postgresql@16`. El `docker-compose.yml` queda preparat per quan hi hagi Docker o Colima disponible.
 
 Si vols un Postgres compartit o acostumat a l'ecosistema Docker:
 
