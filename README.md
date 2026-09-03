@@ -9,7 +9,7 @@ Aplicació per gestionar receptes de cuina. MVP amb CRUD de receptes (ingredient
 - **Monorepo** amb [pnpm](https://pnpm.io) workspaces
 - **API** — [Fastify 5](https://fastify.dev/) + [Drizzle ORM](https://orm.drizzle.team/)
 - **DB** — [PostgreSQL 16](https://www.postgresql.org/) via [postgres-js](https://github.com/porsager/postgres) **o** [PGlite](https://github.com/electric-sql/pglite) (Postgres WASM embegut, zero-config)
-- **Web** — [Nuxt 3](https://nuxt.com/) (SPA) + [PrimeVue 4](https://primevue.org/) (tema Aura)
+- **Web** — [Nuxt 3](https://nuxt.com/) (SPA) amb sistema de disseny propi (CSS a `assets/css/main.css`, sense llibreria de components)
 - **Validació** — [Zod](https://zod.dev/) (esquemes compartits al package `shared`)
 - **Tipus compartits** — `packages/shared` consumit per API i web via workspace protocol
 - **Tests** — [Vitest](https://vitest.dev/) + PGlite (DB in-memory per tests API)
@@ -34,12 +34,16 @@ Aplicació per gestionar receptes de cuina. MVP amb CRUD de receptes (ingredient
 │   │   ├── tests/             # Tests d'integració (PGlite)
 │   │   ├── drizzle.config.ts
 │   │   └── package.json
-│   └── web/                # Nuxt 3 SPA + PrimeVue
-│       ├── pages/             # Rutes: /, /recipes/new, /recipes/[id]
-│       ├── components/        # (reservat)
+│   └── web/                # Nuxt 3 SPA amb CSS propi
+│       ├── assets/css/        # Sistema de disseny: tokens, mode clar/fosc
+│       ├── pages/             # Rutes: /, /cerca, /favorits, /recipes/new, /recipes/[id]
+│       ├── components/
+│       │   └── RecipeCard.vue
 │       ├── composables/
 │       │   └── useRecipes.ts  # CRUD cap a l'API
-│       ├── tests/             # Tests Vitest (composable)
+│       ├── utils/
+│       │   └── recipes.ts     # Temporades i parsing de quantitats
+│       ├── tests/             # Tests Vitest (composable + utils)
 │       ├── nuxt.config.ts
 │       └── package.json
 ├── packages/
@@ -176,11 +180,29 @@ Esquemes Zod equivalents a `packages/shared/src/recipe.ts`.
 
 ## Pròximes iteracions (idees)
 
+Abans d'agafar-ne cap, llegeix [`.agents/hard-rules.md`](.agents/hard-rules.md):
+algunes idees d'aquesta llista ja estan tancades per una decisió de negoci.
+
+Definit i a punt (veure [`.agents/specs/`](.agents/specs/)):
+
+- [ ] Categoria, temporada i dificultat com a classificació tancada — spec 001
+- [ ] Cerca per títol **i ingredients**, insensible a accents — spec 001
+- [ ] Aplicar el disseny *Heirloom & Harvest* a les pàgines — spec 002
+
+Idees obertes:
+
 - [ ] Autenticació multi-usuari (Lucia / better-auth)
-- [ ] Imatges de recepta (storage S3-compatible)
-- [ ] Categories i tags
-- [ ] Cerca full-text sobre títol + descripció + notes
 - [ ] Importació des d'URL o OCR
-- [ ] "Llista de la compra" agregant ingredients
 - [ ] i18n (català / castellà / anglès)
-- [ ] Tema fosc (botó + `darkModeSelector: '.dark'` ja configurat a PrimeVue)
+
+Descartat:
+
+- ~~Imatges de recepta~~ — el receptari és només text (HR-008)
+- ~~Tags lliures~~ — substituïts per categoria/temporada/dificultat (HR-007)
+- ~~Cerca sobre descripció i notes~~ — la cerca cobreix títol i ingredients (HR-005)
+- ~~"Llista de la compra" agregant ingredients~~ — les unitats són text lliure i
+  no es converteixen mai (HR-003), així que no es poden sumar
+
+Fet:
+
+- [x] Tema fosc (botó a la nav, classe `.dark` a l'arrel)
