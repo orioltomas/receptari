@@ -83,12 +83,32 @@ pnpm db:migrate
 ```
 
 Sortida esperada:
+
 ```
 🐘 PGlite → ./data/receptari
 ✅ Migracions aplicades
 ```
 
-### 4. Arrenca API + web en paral·lel
+### 4. Carrega dades de prova (opcional)
+
+```bash
+pnpm db:seed
+```
+
+Sortida esperada:
+
+```
+🐘 PGlite → ./data/receptari
+✅ 8 receptes carregades
+```
+
+El seed és **idempotent**: buida les receptes (i, per cascada, ingredients i
+passos) abans d'inserir, així que es pot executar tantes vegades com calgui
+sense duplicar res. Les vuit receptes cobreixen totes les categories, una
+recepta sense temporada, una sense dificultat, un ingredient sense quantitat ni
+unitat i els tres trams de temps.
+
+### 5. Arrenca API + web en paral·lel
 
 ```bash
 pnpm dev
@@ -115,6 +135,7 @@ pnpm db:logs     # (opcional) veure logs
 ### 2. Apunta l'API al Postgres
 
 Edita `apps/api/.env`:
+
 ```
 DATABASE_URL=postgres://receptari:receptari@localhost:5432/receptari
 ```
@@ -123,6 +144,7 @@ DATABASE_URL=postgres://receptari:receptari@localhost:5432/receptari
 
 ```bash
 pnpm db:migrate
+pnpm db:seed     # opcional, mateix seed que amb PGlite
 pnpm dev
 ```
 
@@ -130,12 +152,12 @@ Per aturar la DB: `pnpm db:down`.
 
 ## Formats de DATABASE_URL suportats
 
-| URL                                              | Driver       | Persistència              |
-| ------------------------------------------------ | ------------ | ------------------------- |
-| `pglite://`                                      | PGlite       | In-memory (es perd)       |
-| `pglite://./data/receptari`                      | PGlite       | Fitxer `./data/receptari` |
-| `pglite:///abs/path/to/db`                       | PGlite       | Path absolut              |
-| `postgres://user:pass@host:5432/db`              | postgres-js  | Servidor Postgres real    |
+| URL                                 | Driver      | Persistència              |
+| ----------------------------------- | ----------- | ------------------------- |
+| `pglite://`                         | PGlite      | In-memory (es perd)       |
+| `pglite://./data/receptari`         | PGlite      | Fitxer `./data/receptari` |
+| `pglite:///abs/path/to/db`          | PGlite      | Path absolut              |
+| `postgres://user:pass@host:5432/db` | postgres-js | Servidor Postgres real    |
 
 L'API arrenca amb un o altre driver segons el prefix de la URL, sense canvis al codi.
 
@@ -161,14 +183,14 @@ pnpm build             # compila API (tsc) + web (nuxt build)
 
 ## Endpoints API
 
-| Mètode | Ruta                    | Descripció                                  |
-| ------ | ----------------------- | -------------------------------------------- |
-| GET    | `/api/health`           | Health check                                 |
-| GET    | `/api/recipes?q=...`    | Llista (cerca per títol)                     |
-| GET    | `/api/recipes/:id`      | Detall amb ingredients + passos              |
-| POST   | `/api/recipes`          | Crear (transacció: recipe + ingredients + steps) |
-| PATCH  | `/api/recipes/:id`      | Actualitzar (substitueix ingredients + steps) |
-| DELETE | `/api/recipes/:id`      | Esborrar (cascadeja ingredients + steps)     |
+| Mètode | Ruta                 | Descripció                                       |
+| ------ | -------------------- | ------------------------------------------------ |
+| GET    | `/api/health`        | Health check                                     |
+| GET    | `/api/recipes?q=...` | Llista (cerca per títol)                         |
+| GET    | `/api/recipes/:id`   | Detall amb ingredients + passos                  |
+| POST   | `/api/recipes`       | Crear (transacció: recipe + ingredients + steps) |
+| PATCH  | `/api/recipes/:id`   | Actualitzar (substitueix ingredients + steps)    |
+| DELETE | `/api/recipes/:id`   | Esborrar (cascadeja ingredients + steps)         |
 
 ## Model de dades
 
@@ -187,7 +209,7 @@ Definit i a punt (veure [`.agents/specs/`](.agents/specs/)):
 
 - [ ] Categoria, temporada i dificultat com a classificació tancada — spec 001
 - [ ] Cerca per títol **i ingredients**, insensible a accents — spec 001
-- [ ] Aplicar el disseny *Heirloom & Harvest* a les pàgines — spec 002
+- [ ] Aplicar el disseny _Heirloom & Harvest_ a les pàgines — spec 002
 
 Idees obertes:
 
