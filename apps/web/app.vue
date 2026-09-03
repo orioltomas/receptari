@@ -1,120 +1,88 @@
 <script setup lang="ts">
+function getInitialTheme(): boolean {
+  if (typeof localStorage === 'undefined') return false;
+  const saved = localStorage.getItem('receptari-theme');
+  return saved ? saved === 'dark' : false;
+}
+
+const isDark = ref(getInitialTheme());
+
 useHead({
-  htmlAttrs: { lang: 'ca' },
+  htmlAttrs: {
+    lang: 'ca',
+    class: () => (isDark.value ? 'dark' : ''),
+  },
 });
+
+function toggleTheme() {
+  isDark.value = !isDark.value;
+  localStorage.setItem('receptari-theme', isDark.value ? 'dark' : 'light');
+}
+
+const navItems = [
+  { to: '/', label: 'Inici', icon: 'home' },
+  { to: '/recipes/new', label: 'Afegir', icon: 'add_circle' },
+  { to: '/favorits', label: 'Favorits', icon: 'favorite' },
+  { to: '/cerca', label: 'Cerca', icon: 'search' },
+] as const;
 </script>
 
 <template>
   <div class="app-shell">
-    <header class="app-header">
-      <NuxtLink to="/" class="brand">📖 Receptari</NuxtLink>
-      <nav>
-        <NuxtLink to="/recipes/new" class="nav-link">
-          <i class="pi pi-plus" /> Nova recepta
-        </NuxtLink>
-      </nav>
-    </header>
+    <nav class="nav-cluster" aria-label="Navegació principal">
+      <NuxtLink
+        v-for="item in navItems"
+        :key="item.to"
+        :to="item.to"
+        class="nav-cluster-link"
+        exact-active-class="is-active"
+        :aria-label="item.label"
+        :title="item.label"
+      >
+        <span class="material-symbols-outlined">{{ item.icon }}</span>
+      </NuxtLink>
+
+      <span class="nav-divider" aria-hidden="true"></span>
+
+      <button
+        class="nav-cluster-link"
+        type="button"
+        :aria-label="isDark ? 'Canviar a mode clar' : 'Canviar a mode fosc'"
+        :title="isDark ? 'Mode clar' : 'Mode fosc'"
+        @click="toggleTheme"
+      >
+        <span class="material-symbols-outlined">{{ isDark ? 'light_mode' : 'dark_mode' }}</span>
+      </button>
+    </nav>
+
     <main class="app-main">
       <NuxtPage />
     </main>
+
+    <nav class="bottom-nav" aria-label="Navegació principal mòbil">
+      <div class="bottom-nav-pill">
+        <NuxtLink
+          v-for="item in navItems"
+          :key="item.to"
+          :to="item.to"
+          class="bottom-nav-link"
+          exact-active-class="is-active"
+          :aria-label="item.label"
+        >
+          <span class="material-symbols-outlined">{{ item.icon }}</span>
+        </NuxtLink>
+
+        <span class="nav-divider" aria-hidden="true"></span>
+
+        <button
+          class="bottom-nav-link"
+          type="button"
+          :aria-label="isDark ? 'Canviar a mode clar' : 'Canviar a mode fosc'"
+          @click="toggleTheme"
+        >
+          <span class="material-symbols-outlined">{{ isDark ? 'light_mode' : 'dark_mode' }}</span>
+        </button>
+      </div>
+    </nav>
   </div>
 </template>
-
-<style>
-:root {
-  --bg: #fafafa;
-  --surface: #ffffff;
-  --border: #e5e7eb;
-  --text: #111827;
-  --muted: #6b7280;
-}
-
-.dark {
-  --bg: #0b0b0b;
-  --surface: #161616;
-  --border: #2a2a2a;
-  --text: #f5f5f5;
-  --muted: #9ca3af;
-}
-
-* {
-  box-sizing: border-box;
-}
-
-html,
-body,
-#__nuxt {
-  margin: 0;
-  padding: 0;
-  height: 100%;
-}
-
-body {
-  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
-  background: var(--bg);
-  color: var(--text);
-}
-
-.app-shell {
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-}
-
-.app-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 1rem 2rem;
-  background: var(--surface);
-  border-bottom: 1px solid var(--border);
-  position: sticky;
-  top: 0;
-  z-index: 10;
-}
-
-.brand {
-  font-size: 1.25rem;
-  font-weight: 700;
-  text-decoration: none;
-  color: var(--text);
-}
-
-.nav-link {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.5rem 1rem;
-  border-radius: 6px;
-  background: var(--p-primary-color, #10b981);
-  color: var(--p-primary-contrast-color, #fff);
-  text-decoration: none;
-  font-weight: 500;
-}
-
-.nav-link:hover {
-  opacity: 0.9;
-}
-
-.app-main {
-  flex: 1;
-  padding: 2rem;
-  max-width: 1100px;
-  width: 100%;
-  margin: 0 auto;
-}
-
-.page-title {
-  margin: 0 0 1.5rem;
-  font-size: 1.875rem;
-  font-weight: 700;
-}
-
-.empty {
-  padding: 3rem 1rem;
-  text-align: center;
-  color: var(--muted);
-  border: 1px dashed var(--border);
-  border-radius: 8px;
-}
-</style>

@@ -1,6 +1,14 @@
 <script setup lang="ts">
 import type { Recipe, UpdateRecipeInput } from '@receptari/shared';
 
+interface IngredientDraft {
+  quantityText: string;
+  name: string;
+}
+interface StepDraft {
+  instruction: string;
+}
+
 const route = useRoute();
 const id = computed(() => String(route.params.id));
 
@@ -9,6 +17,7 @@ const loading = ref(true);
 const saving = ref(false);
 const error = ref<string | null>(null);
 const editing = ref(false);
+const checkedIngredients = ref<Set<string>>(new Set());
 
 async function load() {
   loading.value = true;
@@ -24,74 +33,75 @@ async function load() {
 
 await load();
 
-const editTitle = ref('');
-const editDescription = ref<string | null>(null);
-const editNotes = ref<string | null>(null);
-const editPrep = ref<number | null>(null);
-const editCook = ref<number | null>(null);
-const editServings = ref<number | null>(null);
+function toggleIngredient(ingredientId: string) {
+  if (checkedIngredients.value.has(ingredientId)) {
+    checkedIngredients.value.delete(ingredientId);
+  } else {
+    checkedIngredients.value.add(ingredientId);
+  }
+}
 
-interface IngredientDraft {
-  name: string;
-  quantity: number | null;
-  unit: string | null;
-}
-interface StepDraft {
-  instruction: string;
-}
+/* ---------- Edició ---------- */
+
+const editTitle = ref('');
+const editDescription = ref('');
+const editNotes = ref('');
+const editPrep = ref('');
+const editCook = ref('');
+const editServings = ref('');
+const editImageUrl = ref('');
+const editTagsText = ref('');
+const editSeason = ref<string | null>(null);
+const showImageInput = ref(false);
+
 const editIngredients = ref<IngredientDraft[]>([]);
 const editSteps = ref<StepDraft[]>([]);
 
-watch(recipe, (r) => {
-  if (!r) return;
+function resetEditForm(r: Recipe) {
   editTitle.value = r.title;
-  editDescription.value = r.description;
-  editNotes.value = r.notes;
-  editPrep.value = r.prepTimeMinutes;
-  editCook.value = r.cookTimeMinutes;
-  editServings.value = r.servings;
+  editDescription.value = r.description ?? '';
+  editNotes.value = r.notes ?? '';
+  editPrep.value = r.prepTimeMinutes != null ? String(r.prepTimeMinutes) : '';
+  editCook.value = r.cookTimeMinutes != null ? String(r.cookTimeMinutes) : '';
+  editServings.value = r.servings != null ? String(r.servings) : '';
+  editImageUrl.value = r.imageUrl ?? '';
+  showImageInput.value = r.imageUrl != null;
+  const seasonTag = r.tags.find((t) => isSeasonTag(t));
+  editSeason.value = seasonTag ?? null;
+  editTagsText.value = r.tags.filter((t) => !isSeasonTag(t)).join(', ');
   editIngredients.value =
     r.ingredients.length > 0
-      ? r.ingredients.map((i) => ({ name: i.name, quantity: i.quantity, unit: i.unit }))
-      : [{ name: '', quantity: null, unit: null }];
+      ? r.ingredients.map((i) => ({
+          quantityText: formatQuantity(i.quantity, i.unit),
+          name: i.name,
+        }))
+      : [{ quantityText: '', name: '' }];
   editSteps.value =
     r.steps.length > 0
       ? r.steps.map((s) => ({ instruction: s.instruction }))
       : [{ instruction: '' }];
-}, { immediate: true });
+}
+
+watch(
+  recipe,
+  (r) => {
+    if (!r) return;
+    resetEditForm(r);
+  },
+  { immediate: true },
+);
 
 function startEdit() {
   editing.value = true;
+  if (recipe.value) resetEditForm(recipe.value);
 }
 function cancelEdit() {
   editing.value = false;
-  if (recipe.value) {
-    watch(
-      recipe,
-      (r) => {
-        if (!r) return;
-        editTitle.value = r.title;
-        editDescription.value = r.description;
-        editNotes.value = r.notes;
-        editPrep.value = r.prepTimeMinutes;
-        editCook.value = r.cookTimeMinutes;
-        editServings.value = r.servings;
-        editIngredients.value =
-          r.ingredients.length > 0
-            ? r.ingredients.map((i) => ({ name: i.name, quantity: i.quantity, unit: i.unit }))
-            : [{ name: '', quantity: null, unit: null }];
-        editSteps.value =
-          r.steps.length > 0
-            ? r.steps.map((s) => ({ instruction: s.instruction }))
-            : [{ instruction: '' }];
-      },
-      { once: true },
-    );
-  }
+  if (recipe.value) resetEditForm(recipe.value);
 }
 
 function addIngredient() {
-  editIngredients.value.push({ name: '', quantity: null, unit: null });
+  editIngredients.value.push({ quantityText: '', name: '' });
 }
 function removeIngredient(i: number) {
   editIngredients.value.splice(i, 1);
@@ -111,6 +121,11 @@ function moveStep(i: number, dir: -1 | 1) {
   editSteps.value.splice(target, 0, item);
 }
 
+function buildTags(): string[] {
+  const others = parseTags(editTagsText.value).filter((t) => !isSeasonTag(t));
+  return [...(editSeason.value ? [editSeason.value] : []), ...others].slice(0, 10);
+}
+
 async function saveEdit() {
   if (!recipe.value) return;
   if (!editTitle.value.trim()) {
@@ -119,18 +134,20 @@ async function saveEdit() {
   }
   const payload: UpdateRecipeInput = {
     title: editTitle.value.trim(),
-    description: editDescription.value?.trim() || null,
-    notes: editNotes.value?.trim() || null,
-    prepTimeMinutes: editPrep.value,
-    cookTimeMinutes: editCook.value,
-    servings: editServings.value,
+    description: editDescription.value.trim() || null,
+    notes: editNotes.value.trim() || null,
+    prepTimeMinutes: numOrNull(editPrep.value),
+    cookTimeMinutes: numOrNull(editCook.value),
+    servings: numOrNull(editServings.value),
+    imageUrl: editImageUrl.value.trim() || null,
+    isFavorite: recipe.value.isFavorite,
+    tags: buildTags(),
     ingredients: editIngredients.value
       .filter((i) => i.name.trim().length > 0)
-      .map((i) => ({
-        name: i.name.trim(),
-        quantity: i.quantity,
-        unit: i.unit?.trim() || null,
-      })),
+      .map((i) => {
+        const { quantity, unit } = parseQuantityInput(i.quantityText);
+        return { name: i.name.trim(), quantity, unit };
+      }),
     steps: editSteps.value
       .filter((s) => s.instruction.trim().length > 0)
       .map((s) => ({ instruction: s.instruction.trim() })),
@@ -163,17 +180,15 @@ async function deleteRecipe() {
   }
 }
 
-function formatIngredient(ing: { name: string; quantity: number | null; unit: string | null }): string {
-  const parts: string[] = [];
-  if (ing.quantity != null) parts.push(String(ing.quantity));
-  if (ing.unit) parts.push(ing.unit);
-  parts.push(ing.name);
-  return parts.join(' ');
-}
-
-function totalMinutes(r: Recipe): number | null {
-  const t = (r.prepTimeMinutes ?? 0) + (r.cookTimeMinutes ?? 0);
-  return t > 0 ? t : null;
+async function toggleFavorite() {
+  if (!recipe.value) return;
+  const next = !recipe.value.isFavorite;
+  try {
+    await useRecipes().toggleFavorite(recipe.value.id, next);
+    recipe.value.isFavorite = next;
+  } catch (err) {
+    error.value = err instanceof Error ? err.message : 'Error actualitzant favorit';
+  }
 }
 </script>
 
@@ -183,312 +198,308 @@ function totalMinutes(r: Recipe): number | null {
 
     <div v-else-if="error && !recipe">
       <p class="error">{{ error }}</p>
-      <NuxtLink to="/"><Button label="Tornar" /></NuxtLink>
+      <NuxtLink to="/" class="btn-primary">Tornar</NuxtLink>
     </div>
 
     <template v-else-if="recipe">
-      <div class="header">
-        <div>
-          <NuxtLink to="/" class="back-link">
-            <i class="pi pi-arrow-left" /> Tornar
+      <!-- Vista detall -->
+      <div v-if="!editing" class="detail-header">
+        <div class="detail-info">
+          <NuxtLink to="/" class="nav-link">
+            <span class="material-symbols-outlined">arrow_back</span>
+            Tornar
           </NuxtLink>
-          <h1 class="page-title">{{ recipe.title }}</h1>
-          <div v-if="!editing" class="meta">
-            <span v-if="totalMinutes(recipe)"><i class="pi pi-clock" /> {{ totalMinutes(recipe) }} min</span>
-            <span v-if="recipe.servings"><i class="pi pi-users" /> {{ recipe.servings }} racions</span>
-            <span>{{ recipe.ingredients.length }} ingredients · {{ recipe.steps.length }} passos</span>
+          <h1 class="detail-title">{{ recipe.title }}</h1>
+          <div class="detail-meta">
+            <span v-if="totalTimeLabel(recipe.prepTimeMinutes, recipe.cookTimeMinutes) !== '—'">
+              <span class="material-symbols-outlined">schedule</span>
+              {{ totalTimeLabel(recipe.prepTimeMinutes, recipe.cookTimeMinutes) }}
+            </span>
+            <span v-if="recipe.servings != null">
+              <span class="material-symbols-outlined">group</span>
+              {{ recipe.servings }} comensals
+            </span>
+            <span>
+              {{ recipe.ingredients.length }} ingredients · {{ recipe.steps.length }} passos
+            </span>
+          </div>
+          <div v-if="recipe.tags.length" class="card-tags">
+            <span
+              v-for="(tag, ti) in recipe.tags"
+              :key="tag"
+              class="tag"
+              :class="{ 'tone-sage': ti === 0 }"
+            >
+              {{ tag }}
+            </span>
+          </div>
+          <div class="detail-actions">
+            <button type="button" class="btn-primary" @click="startEdit">
+              <span class="material-symbols-outlined">edit</span>
+              Editar
+            </button>
+            <button
+              type="button"
+              class="btn-ghost"
+              :class="{ 'is-favorite': recipe.isFavorite }"
+              @click="toggleFavorite"
+            >
+              <span class="material-symbols-outlined">favorite</span>
+              {{ recipe.isFavorite ? 'Favorit' : 'Afegir a favorits' }}
+            </button>
+            <button type="button" class="btn-danger" @click="deleteRecipe">
+              <span class="material-symbols-outlined">delete</span>
+              Esborrar
+            </button>
           </div>
         </div>
-        <div v-if="!editing" class="actions">
-          <Button label="Editar" icon="pi pi-pencil" @click="startEdit" />
-          <Button label="Esborrar" icon="pi pi-trash" severity="danger" @click="deleteRecipe" />
+
+        <div class="detail-media">
+          <img v-if="recipe.imageUrl" :src="recipe.imageUrl" :alt="recipe.title" />
+          <span v-else class="material-symbols-outlined">restaurant_menu</span>
         </div>
       </div>
 
       <div v-if="!editing">
-        <p v-if="recipe.description" class="lead">{{ recipe.description }}</p>
+        <p v-if="recipe.description" class="detail-lead">{{ recipe.description }}</p>
 
-        <section class="card-section">
-          <h2>Ingredients</h2>
-          <ul class="ingredients">
+        <section class="form-section">
+          <h2 class="section-title">
+            <span class="material-symbols-outlined">kitchen</span>
+            Ingredients
+          </h2>
+          <ul class="ingredients-list">
             <li v-for="ing in recipe.ingredients" :key="ing.id">
-              {{ formatIngredient(ing) }}
+              <button
+                type="button"
+                class="ingredient-item"
+                :class="{ 'is-checked': checkedIngredients.has(ing.id) }"
+                @click="toggleIngredient(ing.id)"
+              >
+                <span class="ingredient-box">
+                  <span class="material-symbols-outlined">check</span>
+                </span>
+                <span class="ingredient-text">{{ formatIngredient(ing) }}</span>
+              </button>
             </li>
           </ul>
+          <p v-if="recipe.ingredients.length === 0" class="field-hint">
+            Aquesta recepta no té ingredients registrats.
+          </p>
         </section>
 
-        <section class="card-section">
-          <h2>Passos</h2>
-          <ol class="steps">
-            <li v-for="step in recipe.steps" :key="step.id">{{ step.instruction }}</li>
+        <section class="form-section">
+          <h2 class="section-title">
+            <span class="material-symbols-outlined">menu_book</span>
+            Pas a pas
+          </h2>
+          <ol class="steps-list">
+            <li v-for="(step, i) in recipe.steps" :key="step.id">
+              <span class="step-num">{{ i + 1 }}</span>
+              <span class="step-text">{{ step.instruction }}</span>
+            </li>
           </ol>
         </section>
 
-        <section v-if="recipe.notes" class="card-section">
-          <h2>Notes</h2>
-          <p class="notes">{{ recipe.notes }}</p>
+        <section v-if="recipe.notes" class="form-section">
+          <h2 class="section-title">
+            <span class="material-symbols-outlined">sticky_note_2</span>
+            Notes
+          </h2>
+          <p class="notes-text">{{ recipe.notes }}</p>
         </section>
       </div>
 
-      <form v-else class="form" @submit.prevent="saveEdit">
-        <section class="card-section">
-          <h2>Informació general</h2>
-          <div class="field">
-            <label>Títol</label>
-            <InputText v-model="editTitle" />
+      <!-- Edició -->
+      <form v-else class="form-page" @submit.prevent="saveEdit">
+        <button
+          type="button"
+          class="photo-drop"
+          :class="{ 'has-image': editImageUrl }"
+          @click="showImageInput = true"
+        >
+          <img v-if="editImageUrl" :src="editImageUrl" alt="Vista prèvia de la recepta" />
+          <span class="material-symbols-outlined ms-fill">image</span>
+          <span class="photo-drop-title">Canvia la foto de la recepta</span>
+          <span class="photo-drop-hint">Opcional</span>
+        </button>
+
+        <div v-if="showImageInput" class="field photo-url-field">
+          <label class="field-label" for="edit-image">URL de la imatge</label>
+          <input id="edit-image" v-model="editImageUrl" type="url" class="input" placeholder="https://..." />
+        </div>
+
+        <section class="form-section">
+          <div class="field" style="margin-bottom: 1rem">
+            <label class="field-label" for="edit-title">Títol</label>
+            <input id="edit-title" v-model="editTitle" type="text" class="input input--lg" required />
           </div>
-          <div class="field">
-            <label>Descripció</label>
-            <Textarea v-model="editDescription" rows="2" autoResize />
+
+          <div class="field" style="margin-bottom: 1rem">
+            <label class="field-label" for="edit-description">Descripció</label>
+            <textarea id="edit-description" v-model="editDescription" class="textarea" rows="2" />
           </div>
-          <div class="grid-3">
+
+          <div class="form-grid">
             <div class="field">
-              <label>Prep (min)</label>
-              <InputNumber v-model="editPrep" :min="0" :max="9999" />
+              <label class="field-label" for="edit-servings">Comensals</label>
+              <div class="icon-field">
+                <span class="material-symbols-outlined">group</span>
+                <input id="edit-servings" v-model="editServings" type="number" class="input" min="1" max="999" />
+              </div>
             </div>
             <div class="field">
-              <label>Cocció (min)</label>
-              <InputNumber v-model="editCook" :min="0" :max="9999" />
+              <label class="field-label" for="edit-prep">Temps de preparació (min)</label>
+              <div class="icon-field">
+                <span class="material-symbols-outlined">schedule</span>
+                <input id="edit-prep" v-model="editPrep" type="number" class="input" min="0" max="9999" />
+              </div>
             </div>
             <div class="field">
-              <label>Racions</label>
-              <InputNumber v-model="editServings" :min="1" :max="999" />
+              <label class="field-label" for="edit-cook">Temps de cocció (min)</label>
+              <div class="icon-field">
+                <span class="material-symbols-outlined">local_fire_department</span>
+                <input id="edit-cook" v-model="editCook" type="number" class="input" min="0" max="9999" />
+              </div>
             </div>
           </div>
         </section>
 
-        <section class="card-section">
+        <section class="form-section">
           <div class="section-header">
-            <h2>Ingredients</h2>
-            <Button label="Afegir" icon="pi pi-plus" size="small" severity="secondary" @click="addIngredient" />
+            <h2 class="section-title">Temporada ideal</h2>
+          </div>
+          <div class="season-grid">
+            <button
+              v-for="option in SEASON_OPTIONS"
+              :key="option.name"
+              type="button"
+              class="season-option"
+              :class="[`tone-${option.tone}`, { 'is-selected': editSeason === option.name }]"
+              :aria-pressed="editSeason === option.name"
+              @click="editSeason = editSeason === option.name ? null : option.name"
+            >
+              <span class="material-symbols-outlined">{{ option.icon }}</span>
+              <span>{{ option.name }}</span>
+            </button>
+          </div>
+
+          <div class="field" style="margin-top: 1.25rem">
+            <label class="field-label" for="edit-tags">Etiquetes</label>
+            <input id="edit-tags" v-model="editTagsText" type="text" class="input" />
+            <span class="field-hint">Separa les etiquetes amb comes.</span>
+          </div>
+        </section>
+
+        <section class="form-section">
+          <div class="section-header">
+            <h2 class="section-title">
+              <span class="material-symbols-outlined">kitchen</span>
+              Ingredients
+            </h2>
           </div>
           <div v-for="(ing, i) in editIngredients" :key="i" class="ingredient-row">
-            <InputText v-model="ing.name" class="grow" />
-            <InputNumber v-model="ing.quantity" :min="0" :max-fraction-digits="3" />
-            <InputText v-model="ing.unit" />
-            <Button
-              icon="pi pi-trash"
-              severity="danger"
-              text
-              rounded
-              :disabled="editIngredients.length === 1"
-              @click="removeIngredient(i)"
+            <input
+              v-model="ing.quantityText"
+              type="text"
+              class="input ingredient-qty"
+              placeholder="Quantitat (ex: 200g)"
+              :aria-label="`Quantitat de l'ingredient ${i + 1}`"
             />
+            <input
+              v-model="ing.name"
+              type="text"
+              class="input ingredient-name"
+              placeholder="Ingredient (ex: Arròs Arborio)"
+              :aria-label="`Nom de l'ingredient ${i + 1}`"
+            />
+            <button
+              type="button"
+              class="icon-btn icon-btn-danger"
+              :disabled="editIngredients.length === 1"
+              :aria-label="`Eliminar ingredient ${i + 1}`"
+              @click="removeIngredient(i)"
+            >
+              <span class="material-symbols-outlined">close</span>
+            </button>
           </div>
+          <button type="button" class="add-row-btn" @click="addIngredient">
+            <span class="material-symbols-outlined">add</span>
+            Afegir Ingredient
+          </button>
         </section>
 
-        <section class="card-section">
+        <section class="form-section">
           <div class="section-header">
-            <h2>Passos</h2>
-            <Button label="Afegir" icon="pi pi-plus" size="small" severity="secondary" @click="addStep" />
+            <h2 class="section-title">
+              <span class="material-symbols-outlined">menu_book</span>
+              Pas a pas
+            </h2>
+            <button type="button" class="add-row-btn" @click="addStep">
+              <span class="material-symbols-outlined">add</span>
+              Afegir pas
+            </button>
           </div>
           <div v-for="(step, i) in editSteps" :key="i" class="step-row">
             <span class="step-num">{{ i + 1 }}</span>
-            <Textarea v-model="step.instruction" rows="2" autoResize class="grow" />
+            <textarea
+              v-model="step.instruction"
+              class="textarea"
+              rows="2"
+              :aria-label="`Pas ${i + 1}`"
+            />
             <div class="step-actions">
-              <Button icon="pi pi-arrow-up" text rounded :disabled="i === 0" @click="moveStep(i, -1)" />
-              <Button icon="pi pi-arrow-down" text rounded :disabled="i === editSteps.length - 1" @click="moveStep(i, 1)" />
-              <Button
-                icon="pi pi-trash"
-                severity="danger"
-                text
-                rounded
+              <button
+                type="button"
+                class="icon-btn"
+                :disabled="i === 0"
+                aria-label="Moure amunt"
+                @click="moveStep(i, -1)"
+              >
+                <span class="material-symbols-outlined">arrow_upward</span>
+              </button>
+              <button
+                type="button"
+                class="icon-btn"
+                :disabled="i === editSteps.length - 1"
+                aria-label="Moure avall"
+                @click="moveStep(i, 1)"
+              >
+                <span class="material-symbols-outlined">arrow_downward</span>
+              </button>
+              <button
+                type="button"
+                class="icon-btn icon-btn-danger"
                 :disabled="editSteps.length === 1"
+                :aria-label="`Eliminar pas ${i + 1}`"
                 @click="removeStep(i)"
-              />
+              >
+                <span class="material-symbols-outlined">close</span>
+              </button>
             </div>
           </div>
         </section>
 
-        <section class="card-section">
-          <h2>Notes</h2>
-          <Textarea v-model="editNotes" rows="3" autoResize />
+        <section class="form-section">
+          <div class="section-header">
+            <h2 class="section-title">Notes addicionals</h2>
+          </div>
+          <div class="field">
+            <textarea id="edit-notes" v-model="editNotes" class="textarea" rows="3" />
+            <span class="field-hint">Opcional</span>
+          </div>
         </section>
 
         <p v-if="error" class="error">{{ error }}</p>
 
-        <div class="actions">
-          <Button label="Cancel·lar" severity="secondary" @click="cancelEdit" />
-          <Button type="submit" label="Desar canvis" icon="pi pi-check" :loading="saving" />
+        <div class="actions-row">
+          <button type="button" class="btn-ghost" @click="cancelEdit">Cancel·lar</button>
+          <button type="submit" class="btn-primary" :disabled="saving">
+            <span class="material-symbols-outlined">save</span>
+            {{ saving ? 'Desant...' : 'Desar canvis' }}
+          </button>
         </div>
       </form>
     </template>
   </div>
 </template>
-
-<style scoped>
-.header {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  gap: 1rem;
-  margin-bottom: 1.5rem;
-  flex-wrap: wrap;
-}
-
-.back-link {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.4rem;
-  text-decoration: none;
-  color: var(--muted);
-  font-size: 0.875rem;
-  margin-bottom: 0.5rem;
-}
-
-.back-link:hover {
-  color: var(--text);
-}
-
-.meta {
-  display: flex;
-  gap: 1.25rem;
-  color: var(--muted);
-  font-size: 0.875rem;
-  flex-wrap: wrap;
-}
-
-.meta i {
-  margin-right: 0.25rem;
-}
-
-.actions {
-  display: flex;
-  gap: 0.5rem;
-}
-
-.lead {
-  font-size: 1.05rem;
-  color: var(--muted);
-  margin: 0 0 1.5rem;
-}
-
-.card-section {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  padding: 1.5rem;
-  margin-bottom: 1.25rem;
-}
-
-.card-section h2 {
-  margin: 0 0 1rem;
-  font-size: 1.125rem;
-}
-
-.section-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 1rem;
-}
-
-.section-header h2 {
-  margin: 0;
-}
-
-.ingredients {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-}
-
-.ingredients li {
-  padding: 0.5rem 0;
-  border-bottom: 1px solid var(--border);
-}
-
-.ingredients li:last-child {
-  border-bottom: none;
-}
-
-.steps {
-  padding-left: 1.5rem;
-  margin: 0;
-}
-
-.steps li {
-  padding: 0.5rem 0;
-  line-height: 1.6;
-}
-
-.notes {
-  white-space: pre-wrap;
-  margin: 0;
-  line-height: 1.6;
-}
-
-.form {
-  display: flex;
-  flex-direction: column;
-  gap: 1.5rem;
-}
-
-.field {
-  display: flex;
-  flex-direction: column;
-  gap: 0.4rem;
-  margin-bottom: 1rem;
-}
-
-.field label {
-  font-size: 0.875rem;
-  color: var(--muted);
-}
-
-.grid-3 {
-  display: grid;
-  gap: 1rem;
-  grid-template-columns: repeat(3, 1fr);
-}
-
-.ingredient-row {
-  display: grid;
-  gap: 0.5rem;
-  grid-template-columns: 2fr 1fr 1fr auto;
-  margin-bottom: 0.5rem;
-  align-items: center;
-}
-
-.grow {
-  width: 100%;
-}
-
-.step-row {
-  display: grid;
-  grid-template-columns: auto 1fr auto;
-  gap: 0.75rem;
-  margin-bottom: 0.75rem;
-  align-items: start;
-}
-
-.step-num {
-  background: var(--p-primary-color, #10b981);
-  color: #fff;
-  width: 2rem;
-  height: 2rem;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: 600;
-  font-size: 0.875rem;
-  flex-shrink: 0;
-  margin-top: 0.25rem;
-}
-
-.step-actions {
-  display: flex;
-  gap: 0.25rem;
-  margin-top: 0.25rem;
-}
-
-.error {
-  background: #fee;
-  color: #c33;
-  padding: 0.75rem 1rem;
-  border-radius: 6px;
-  border: 1px solid #fcc;
-  margin: 0;
-}
-</style>

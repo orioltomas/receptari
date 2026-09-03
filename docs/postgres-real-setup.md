@@ -1,63 +1,53 @@
 # Migrar de PGlite a Postgres real (brew)
 
-> **Estat actual (2026-09-01):** la MVP arrenca amb PGlite (Postgres WASM embegut en Node, zero-config). Tot funciona: 23/23 tests, CRUD verificat end-to-end.
+> **Estat actual (2026-09-01):** la MVP arrenca amb PGlite (Postgres WASM embegut en Node, zero-config). Tot funciona: 23/23 tests, CRUD verificat end-to-end. **Decidim quedar-nos amb PGlite** per no bloquejar la MVP esperant l'actualització d'Xcode.
 >
-> Aquest doc recull els passos per canviar a Postgres real quan es pugui actualitzar el sistema.
+> Aquest doc recull els passos per canviar a Postgres real quan es pugui actualitzar Xcode.
 
 ## Per què estem amb PGlite ara
 
-A data d'avui la màquina té:
+La màquina té:
 
-- macOS Sonoma **14.8.7** (build 23J520)
-- Xcode **13.4.1** (a `/Applications/Xcode.app`)
-- Command Line Tools antigues (compatibles amb Xcode 13)
+- macOS Sonoma **14.8.9** (build 23J631) ✅
+- Xcode **13.4.1** (a `/Applications/Xcode.app`) ❌
+- Command Line Tools **11.4** (de 2020) ❌
 - Homebrew **6.0.20**
 
-Quan hem intentat `brew install postgresql@16`, brew ha fallat perquè les deps actuals (`icu4c@78`, `openssl@3`, etc.) demanen Xcode ≥ 16.2. Hem provat:
+Quan hem intentat `brew install postgresql@16`, brew ha fallat perquè la dep `openssl@3` (3.6.4) demana **Xcode ≥ 16.2** o **CLT ≥ 16.2**. Hem provat totes les versions alternatives i el bloqueig és comú:
 
-- `softwareupdate --install -a` → no ofereix CLT, només macOS 14.8.9 i Safari
-- `brew install postgresql@13` / `@14` → viable però perdem Postgres 16
+- `brew install postgresql@12` / `@14` / `@15` / `@16` / `@17` / `@18` → totes fallen pel mateix error (dep `openssl@3` o `krb5`)
+- `brew install postgresql@13` → "disabled because it is not supported upstream"
+- `softwareupdate --install -a` → "No updates are available" (ja estem a 14.8.9)
 
-Hem optat per PGlite per no bloquejar la MVP. El codi suporta tots dos drivers via `DATABASE_URL`.
+L'error exacte que dóna brew:
+
+```
+Error: Your Xcode (13.4.1) at /Applications/Xcode.app is too outdated.
+Please update to Xcode 16.2 (or delete it).
+Error: Your Command Line Tools are too outdated.
+Update them from Software Update in System Settings.
+```
+
+Hem optat per PGlite per no bloquejar la MVP. El codi suporta tots dos drivers via `DATABASE_URL` (veure README).
 
 ## Quan reprendre
 
-Un cop **macOS actualitzat a Sonoma 14.8.9** (o superior), `softwareupdate --install -a` ja no ens ofereix res per Xcode, però Xcode es pot actualitzar via App Store o bé es pot tornar a provar `brew install postgresql@16` — les deps noves d'Homebrew poden funcionar amb Sonoma actualitzat.
+Per desbloquejar brew cal **Xcode 16.2 o CLT 16.2**. CLT 16.2 requereix macOS 15 (Sequoia) o superior, per tant des de Sonoma 14.8.9 el camí net és un d'aquests:
 
-Si encara falla, el camí net és actualitzar Xcode (App Store → cerca "Xcode" → Update).
+1. **Actualitzar Xcode via App Store** (~7GB, GUI): "Xcode" → Update. Deixa Xcode 16.2+ al mateix `/Applications/Xcode.app`.brew ho detectarà automàticament.
+2. **Actualitzar macOS a Sequoia 15+** i després `xcode-select --install` per obtenir CLT 16.2.
+3. **(Alternativa)** Esborrar `/Applications/Xcode.app` i instal·lar només CLT 16.2 via `xcode-select --install` un cop macOS ≥ 15.
 
-## Passos exactes
+## Passos exactes (un cop Xcode ≥ 16.2)
 
-### 1. Actualitzar macOS Sonoma
-
-```bash
-softwareupdate --install -a
-# Reiniciar quan ho demani
-```
-
-### 2. Intentar brew directament
+### 1. Comprovar Xcode
 
 ```bash
-brew install postgresql@16
+xcodebuild -version
+# Esperat: Xcode 16.2 o superior
 ```
 
-Si funciona, salta al pas 4. Si falla amb error de CLT/Xcode, continua.
-
-### 3. (Si cal) Actualitzar CLT i Xcode
-
-```bash
-# Esborrar CLT velles
-sudo rm -rf /Library/Developer/CommandLineTools
-
-# Tornar a instal·lar CLT (obre un instal·lador GUI, ~700MB)
-xcode-select --install
-
-# Si brew encara es queixa de Xcode.app:
-sudo xcode-select -s /Applications/Xcode.app/Contents/Developer
-# o actualitzar Xcode via App Store (~7GB)
-```
-
-### 4. Un cop brew funciona
+### 2. Instal·lar Postgres
 
 ```bash
 brew install postgresql@16
@@ -74,7 +64,7 @@ brew services list
 # Esperat: postgresql@16  started
 ```
 
-### 5. Crear usuari i base de dades
+### 3. Crear usuari i base de dades
 
 Connecta't com a `postgres` (l'usuari admin que crea brew per defecte):
 
@@ -98,7 +88,7 @@ PGPASSWORD=receptari psql -h localhost -U receptari -d receptari -c "SELECT 1;"
 # Esperat: 1 fila amb ?column? = 1
 ```
 
-### 6. Apuntar l'API al Postgres real
+### 4. Apuntar l'API al Postgres real
 
 Edita `apps/api/.env`:
 
@@ -113,7 +103,7 @@ Edita `apps/api/.env`:
 rm -rf apps/api/data
 ```
 
-### 7. Aplicar les migracions
+### 5. Aplicar les migracions
 
 ```bash
 pnpm db:migrate
@@ -121,7 +111,7 @@ pnpm db:migrate
 #          ✅ Migracions aplicades
 ```
 
-### 8. Verificar
+### 6. Verificar
 
 ```bash
 pnpm test              # 23/23 (els tests sempre usen PGlite in-memory)

@@ -18,3 +18,6 @@ data
 !.vscode/extensions.json
 !.vscode/settings.json
 *.tsbuildinfo
+
+# Vendored agent skills (restore from skills-lock.json)
+.agents/skills

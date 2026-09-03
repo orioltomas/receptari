@@ -6,14 +6,22 @@ import {
   type RecipeSummary,
   type UpdateRecipeInput,
 } from '@receptari/shared';
-import { count, desc, eq, ilike, sql } from 'drizzle-orm';
+import { and, count, desc, eq, ilike, sql } from 'drizzle-orm';
 import { z } from 'zod';
 import type { Database } from '../../db/client.js';
 import { ingredients, recipes, steps } from '../../db/schema.js';
 import { NotFoundError } from '../../plugins/error-handler.js';
 
 const idParamSchema = z.object({ id: z.string().uuid() });
-const listQuerySchema = z.object({ q: z.string().trim().optional() });
+const listQuerySchema = z.object({
+  q: z.string().trim().optional(),
+  favorite: z
+    .string()
+    .transform((v) => v === 'true')
+    .optional(),
+});
+
+const toggleFavoriteSchema = z.object({ isFavorite: z.boolean() });
 
 type ListQuery = z.infer<typeof listQuerySchema>;
 
@@ -21,7 +29,14 @@ export class RecipesService {
   constructor(private readonly db: Database) {}
 
   async list(query: ListQuery = {}): Promise<RecipeSummary[]> {
-    const where = query.q ? ilike(recipes.title, `%${query.q}%`) : undefined;
+    const conditions = [];
+    if (query.q) {
+      conditions.push(ilike(recipes.title, `%${query.q}%`));
+    }
+    if (query.favorite) {
+      conditions.push(eq(recipes.isFavorite, true));
+    }
+    const where = conditions.length > 0 ? and(...conditions) : undefined;
 
     const rows = await this.db
       .select({
@@ -31,6 +46,9 @@ export class RecipesService {
         prepTimeMinutes: recipes.prepTimeMinutes,
         cookTimeMinutes: recipes.cookTimeMinutes,
         servings: recipes.servings,
+        imageUrl: recipes.imageUrl,
+        isFavorite: recipes.isFavorite,
+        tags: recipes.tags,
         createdAt: recipes.createdAt,
         updatedAt: recipes.updatedAt,
         ingredientCount: count(ingredients.id),
@@ -48,6 +66,9 @@ export class RecipesService {
       prepTimeMinutes: r.prepTimeMinutes,
       cookTimeMinutes: r.cookTimeMinutes,
       servings: r.servings,
+      imageUrl: r.imageUrl,
+      isFavorite: r.isFavorite,
+      tags: parseTags(r.tags),
       ingredientCount: Number(r.ingredientCount ?? 0),
       createdAt: r.createdAt.toISOString(),
       updatedAt: r.updatedAt.toISOString(),
@@ -73,29 +94,7 @@ export class RecipesService {
       throw new NotFoundError(`Recepta ${recipeId} no trobada`);
     }
 
-    return {
-      id: recipe.id,
-      title: recipe.title,
-      description: recipe.description,
-      notes: recipe.notes,
-      prepTimeMinutes: recipe.prepTimeMinutes,
-      cookTimeMinutes: recipe.cookTimeMinutes,
-      servings: recipe.servings,
-      ingredients: recipe.ingredients.map((i) => ({
-        id: i.id,
-        name: i.name,
-        quantity: i.quantity != null ? Number(i.quantity) : null,
-        unit: i.unit,
-        position: i.position,
-      })),
-      steps: recipe.steps.map((s) => ({
-        id: s.id,
-        position: s.position,
-        instruction: s.instruction,
-      })),
-      createdAt: recipe.createdAt.toISOString(),
-      updatedAt: recipe.updatedAt.toISOString(),
-    };
+    return mapRecipe(recipe);
   }
 
   async create(input: CreateRecipeInput): Promise<Recipe> {
@@ -111,6 +110,9 @@ export class RecipesService {
           prepTimeMinutes: data.prepTimeMinutes,
           cookTimeMinutes: data.cookTimeMinutes,
           servings: data.servings,
+          imageUrl: data.imageUrl,
+          isFavorite: data.isFavorite,
+          tags: serializeTags(data.tags),
         })
         .returning();
 
@@ -178,6 +180,9 @@ export class RecipesService {
           prepTimeMinutes: data.prepTimeMinutes,
           cookTimeMinutes: data.cookTimeMinutes,
           servings: data.servings,
+          imageUrl: data.imageUrl,
+          isFavorite: data.isFavorite,
+          tags: serializeTags(data.tags),
           updatedAt: new Date(),
         })
         .where(eq(recipes.id, recipeId));
@@ -230,6 +235,38 @@ export class RecipesService {
       throw new NotFoundError(`Recepta ${recipeId} no trobada`);
     }
   }
+
+  async setFavorite(id: string, body: unknown): Promise<Recipe> {
+    const { id: recipeId } = idParamSchema.parse({ id });
+    const { isFavorite } = toggleFavoriteSchema.parse(body);
+
+    const existing = await this.db.query.recipes.findFirst({
+      where: eq(recipes.id, recipeId),
+    });
+    if (!existing) {
+      throw new NotFoundError(`Recepta ${recipeId} no trobada`);
+    }
+
+    await this.db
+      .update(recipes)
+      .set({ isFavorite, updatedAt: new Date() })
+      .where(eq(recipes.id, recipeId));
+
+    return this.getById(recipeId);
+  }
+}
+
+function serializeTags(tags?: string[] | null): string | null {
+  if (!tags || tags.length === 0) return null;
+  return tags.join(',');
+}
+
+function parseTags(raw: string | null): string[] {
+  if (!raw) return [];
+  return raw
+    .split(',')
+    .map((t) => t.trim())
+    .filter(Boolean);
 }
 
 function mapRecipe(row: {
@@ -240,6 +277,9 @@ function mapRecipe(row: {
   prepTimeMinutes: number | null;
   cookTimeMinutes: number | null;
   servings: number | null;
+  imageUrl: string | null;
+  isFavorite: boolean;
+  tags: string | null;
   createdAt: Date;
   updatedAt: Date;
   ingredients: Array<{
@@ -259,6 +299,9 @@ function mapRecipe(row: {
     prepTimeMinutes: row.prepTimeMinutes,
     cookTimeMinutes: row.cookTimeMinutes,
     servings: row.servings,
+    imageUrl: row.imageUrl,
+    isFavorite: row.isFavorite,
+    tags: parseTags(row.tags),
     ingredients: row.ingredients.map((i) => ({
       id: i.id,
       name: i.name,
