@@ -1,11 +1,24 @@
 <script setup lang="ts">
-import type { RecipeSummary } from '@receptari/shared';
+import {
+  CATEGORY_KEYS,
+  type CategoryKey,
+  type RecipeSummary,
+  type SeasonKey,
+} from '@receptari/shared';
 
-const CATEGORIES = ['Esmorzars', 'Dinars', 'Sopars', 'Postres'] as const;
+// Etiquetes catalanes provisionals: la taula definitiva arriba amb l'especificació 002.
+const CATEGORY_LABELS: Record<CategoryKey, string> = {
+  breakfast: 'Esmorzars',
+  lunch: 'Dinars',
+  dinner: 'Sopars',
+  dessert: 'Postres',
+  snack: 'Berenars',
+  bread: 'Pans',
+};
 
 const query = ref('');
-const activeCategory = ref<string | null>(null);
-const activeSeason = ref<string | null>(null);
+const activeCategory = ref<CategoryKey | null>(null);
+const activeSeason = ref<SeasonKey | null>(null);
 const recipes = ref<RecipeSummary[]>([]);
 const loading = ref(false);
 const error = ref<string | null>(null);
@@ -31,35 +44,21 @@ watch(query, () => {
 
 await search();
 
-function toggleCategory(category: string) {
+function toggleCategory(category: CategoryKey) {
   activeCategory.value = activeCategory.value === category ? null : category;
 }
 
-function toggleSeason(season: string) {
+function toggleSeason(season: SeasonKey) {
   activeSeason.value = activeSeason.value === season ? null : season;
 }
 
 const filtered = computed(() =>
   recipes.value.filter((r) => {
-    if (activeCategory.value && !r.tags.some((t) => tagsMatch(t, activeCategory.value!))) {
-      return false;
-    }
-    if (activeSeason.value && !r.tags.some((t) => tagsMatch(t, activeSeason.value!))) {
-      return false;
-    }
+    if (activeCategory.value && r.category !== activeCategory.value) return false;
+    if (activeSeason.value && r.season !== activeSeason.value) return false;
     return true;
   }),
 );
-
-async function toggleFavorite(recipe: RecipeSummary) {
-  const next = !recipe.isFavorite;
-  try {
-    await useRecipes().toggleFavorite(recipe.id, next);
-    recipe.isFavorite = next;
-  } catch (err) {
-    error.value = err instanceof Error ? err.message : 'Error actualitzant favorit';
-  }
-}
 </script>
 
 <template>
@@ -82,14 +81,14 @@ async function toggleFavorite(recipe: RecipeSummary) {
           <span class="filter-label">Per Categoria</span>
           <div class="chips">
             <button
-              v-for="category in CATEGORIES"
+              v-for="category in CATEGORY_KEYS"
               :key="category"
               type="button"
               class="chip"
               :class="{ 'is-selected': activeCategory === category }"
               @click="toggleCategory(category)"
             >
-              {{ category }}
+              {{ CATEGORY_LABELS[category] }}
             </button>
           </div>
         </div>
@@ -99,14 +98,14 @@ async function toggleFavorite(recipe: RecipeSummary) {
           <div class="chips">
             <button
               v-for="season in SEASON_OPTIONS"
-              :key="season.name"
+              :key="season.key"
               type="button"
               class="chip chip-season"
-              :class="{ 'is-selected': activeSeason === season.name }"
-              @click="toggleSeason(season.name)"
+              :class="{ 'is-selected': activeSeason === season.key }"
+              @click="toggleSeason(season.key)"
             >
               <span class="material-symbols-outlined">{{ season.icon }}</span>
-              {{ season.name }}
+              {{ season.label }}
             </button>
           </div>
         </div>
@@ -135,7 +134,6 @@ async function toggleFavorite(recipe: RecipeSummary) {
           v-for="recipe in filtered"
           :key="recipe.id"
           :recipe="recipe"
-          @toggle-favorite="toggleFavorite"
         />
       </div>
     </section>

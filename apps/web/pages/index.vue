@@ -26,29 +26,15 @@ const greeting = computed(() => {
   return 'Bona nit';
 });
 
-const seasonName = currentSeason();
+const seasonKey = currentSeason();
 
-const featured = computed(
-  () => recipes.value.find((r) => r.isFavorite) ?? recipes.value[0] ?? null,
-);
+const featured = computed(() => recipes.value[0] ?? null);
 
 const seasonal = computed(() => {
-  const bySeason = recipes.value.filter((r) =>
-    r.tags.some((t) => t.toLowerCase() === seasonName.toLowerCase()),
-  );
+  const bySeason = recipes.value.filter((r) => r.season === seasonKey);
   const pool = bySeason.length > 0 ? bySeason : recipes.value;
   return pool.filter((r) => r.id !== featured.value?.id).slice(0, 4);
 });
-
-async function toggleFavorite(recipe: RecipeSummary) {
-  const next = !recipe.isFavorite;
-  try {
-    await useRecipes().toggleFavorite(recipe.id, next);
-    recipe.isFavorite = next;
-  } catch (err) {
-    error.value = err instanceof Error ? err.message : 'Error actualitzant favorit';
-  }
-}
 </script>
 
 <template>
@@ -57,7 +43,7 @@ async function toggleFavorite(recipe: RecipeSummary) {
       <h1 class="display-lg">La meva Cuina</h1>
       <p class="page-lead">
         {{ greeting }}. Què et ve de gust cuinar avui? Explora noves receptes de
-        temporada o revisa els teus favorits.
+        temporada.
       </p>
     </section>
 
@@ -78,11 +64,8 @@ async function toggleFavorite(recipe: RecipeSummary) {
         v-if="featured"
         :to="`/recipes/${featured.id}`"
         class="hero-card"
-        :class="{ 'has-image': featured.imageUrl }"
       >
-        <img v-if="featured.imageUrl" :src="featured.imageUrl" :alt="featured.title" class="hero-img" />
-        <div v-if="featured.imageUrl" class="hero-overlay" />
-        <div v-else class="hero-watermark">
+        <div class="hero-watermark">
           <span class="material-symbols-outlined">restaurant_menu</span>
         </div>
         <div class="hero-content">
@@ -113,7 +96,6 @@ async function toggleFavorite(recipe: RecipeSummary) {
             :key="recipe.id"
             :recipe="recipe"
             compact
-            @toggle-favorite="toggleFavorite"
           />
         </div>
       </section>

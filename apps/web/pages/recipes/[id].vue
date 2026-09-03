@@ -1,12 +1,31 @@
 <script setup lang="ts">
-import type { Recipe, UpdateRecipeInput } from '@receptari/shared';
+import {
+  CATEGORY_KEYS,
+  type CategoryKey,
+  type Recipe,
+  type SeasonKey,
+  type UpdateRecipeInput,
+} from '@receptari/shared';
+
+// Etiquetes catalanes provisionals: la taula definitiva arriba amb l'especificació 002.
+const CATEGORY_LABELS: Record<CategoryKey, string> = {
+  breakfast: 'Esmorzars',
+  lunch: 'Dinars',
+  dinner: 'Sopars',
+  dessert: 'Postres',
+  snack: 'Berenars',
+  bread: 'Pans',
+};
 
 interface IngredientDraft {
   quantityText: string;
   name: string;
 }
 interface StepDraft {
+  // El títol i la durada encara no tenen UI: es conserven per no perdre'ls en desar.
+  title: string | null;
   instruction: string;
+  durationMinutes: number | null;
 }
 
 const route = useRoute();
@@ -49,10 +68,8 @@ const editNotes = ref('');
 const editPrep = ref('');
 const editCook = ref('');
 const editServings = ref('');
-const editImageUrl = ref('');
-const editTagsText = ref('');
-const editSeason = ref<string | null>(null);
-const showImageInput = ref(false);
+const editCategory = ref<CategoryKey>('lunch');
+const editSeason = ref<SeasonKey | null>(null);
 
 const editIngredients = ref<IngredientDraft[]>([]);
 const editSteps = ref<StepDraft[]>([]);
@@ -64,11 +81,8 @@ function resetEditForm(r: Recipe) {
   editPrep.value = r.prepTimeMinutes != null ? String(r.prepTimeMinutes) : '';
   editCook.value = r.cookTimeMinutes != null ? String(r.cookTimeMinutes) : '';
   editServings.value = r.servings != null ? String(r.servings) : '';
-  editImageUrl.value = r.imageUrl ?? '';
-  showImageInput.value = r.imageUrl != null;
-  const seasonTag = r.tags.find((t) => isSeasonTag(t));
-  editSeason.value = seasonTag ?? null;
-  editTagsText.value = r.tags.filter((t) => !isSeasonTag(t)).join(', ');
+  editCategory.value = r.category;
+  editSeason.value = r.season;
   editIngredients.value =
     r.ingredients.length > 0
       ? r.ingredients.map((i) => ({
@@ -78,8 +92,12 @@ function resetEditForm(r: Recipe) {
       : [{ quantityText: '', name: '' }];
   editSteps.value =
     r.steps.length > 0
-      ? r.steps.map((s) => ({ instruction: s.instruction }))
-      : [{ instruction: '' }];
+      ? r.steps.map((s) => ({
+          title: s.title,
+          instruction: s.instruction,
+          durationMinutes: s.durationMinutes,
+        }))
+      : [{ title: null, instruction: '', durationMinutes: null }];
 }
 
 watch(
@@ -107,7 +125,7 @@ function removeIngredient(i: number) {
   editIngredients.value.splice(i, 1);
 }
 function addStep() {
-  editSteps.value.push({ instruction: '' });
+  editSteps.value.push({ title: null, instruction: '', durationMinutes: null });
 }
 function removeStep(i: number) {
   editSteps.value.splice(i, 1);
@@ -119,11 +137,6 @@ function moveStep(i: number, dir: -1 | 1) {
   if (!item) return;
   editSteps.value.splice(i, 1);
   editSteps.value.splice(target, 0, item);
-}
-
-function buildTags(): string[] {
-  const others = parseTags(editTagsText.value).filter((t) => !isSeasonTag(t));
-  return [...(editSeason.value ? [editSeason.value] : []), ...others].slice(0, 10);
 }
 
 async function saveEdit() {
@@ -139,9 +152,9 @@ async function saveEdit() {
     prepTimeMinutes: numOrNull(editPrep.value),
     cookTimeMinutes: numOrNull(editCook.value),
     servings: numOrNull(editServings.value),
-    imageUrl: editImageUrl.value.trim() || null,
-    isFavorite: recipe.value.isFavorite,
-    tags: buildTags(),
+    category: editCategory.value,
+    season: editSeason.value,
+    difficulty: recipe.value.difficulty,
     ingredients: editIngredients.value
       .filter((i) => i.name.trim().length > 0)
       .map((i) => {
@@ -150,7 +163,11 @@ async function saveEdit() {
       }),
     steps: editSteps.value
       .filter((s) => s.instruction.trim().length > 0)
-      .map((s) => ({ instruction: s.instruction.trim() })),
+      .map((s) => ({
+        title: s.title,
+        instruction: s.instruction.trim(),
+        durationMinutes: s.durationMinutes,
+      })),
   };
   if (payload.steps.length === 0) {
     error.value = 'Cal com a mínim un pas';
@@ -180,16 +197,6 @@ async function deleteRecipe() {
   }
 }
 
-async function toggleFavorite() {
-  if (!recipe.value) return;
-  const next = !recipe.value.isFavorite;
-  try {
-    await useRecipes().toggleFavorite(recipe.value.id, next);
-    recipe.value.isFavorite = next;
-  } catch (err) {
-    error.value = err instanceof Error ? err.message : 'Error actualitzant favorit';
-  }
-}
 </script>
 
 <template>
@@ -223,29 +230,13 @@ async function toggleFavorite() {
               {{ recipe.ingredients.length }} ingredients · {{ recipe.steps.length }} passos
             </span>
           </div>
-          <div v-if="recipe.tags.length" class="card-tags">
-            <span
-              v-for="(tag, ti) in recipe.tags"
-              :key="tag"
-              class="tag"
-              :class="{ 'tone-sage': ti === 0 }"
-            >
-              {{ tag }}
-            </span>
+          <div class="card-tags">
+            <span class="tag tone-sage">{{ CATEGORY_LABELS[recipe.category] }}</span>
           </div>
           <div class="detail-actions">
             <button type="button" class="btn-primary" @click="startEdit">
               <span class="material-symbols-outlined">edit</span>
               Editar
-            </button>
-            <button
-              type="button"
-              class="btn-ghost"
-              :class="{ 'is-favorite': recipe.isFavorite }"
-              @click="toggleFavorite"
-            >
-              <span class="material-symbols-outlined">favorite</span>
-              {{ recipe.isFavorite ? 'Favorit' : 'Afegir a favorits' }}
             </button>
             <button type="button" class="btn-danger" @click="deleteRecipe">
               <span class="material-symbols-outlined">delete</span>
@@ -255,8 +246,7 @@ async function toggleFavorite() {
         </div>
 
         <div class="detail-media">
-          <img v-if="recipe.imageUrl" :src="recipe.imageUrl" :alt="recipe.title" />
-          <span v-else class="material-symbols-outlined">restaurant_menu</span>
+          <span class="material-symbols-outlined">restaurant_menu</span>
         </div>
       </div>
 
@@ -312,23 +302,6 @@ async function toggleFavorite() {
 
       <!-- Edició -->
       <form v-else class="form-page" @submit.prevent="saveEdit">
-        <button
-          type="button"
-          class="photo-drop"
-          :class="{ 'has-image': editImageUrl }"
-          @click="showImageInput = true"
-        >
-          <img v-if="editImageUrl" :src="editImageUrl" alt="Vista prèvia de la recepta" />
-          <span class="material-symbols-outlined ms-fill">image</span>
-          <span class="photo-drop-title">Canvia la foto de la recepta</span>
-          <span class="photo-drop-hint">Opcional</span>
-        </button>
-
-        <div v-if="showImageInput" class="field photo-url-field">
-          <label class="field-label" for="edit-image">URL de la imatge</label>
-          <input id="edit-image" v-model="editImageUrl" type="url" class="input" placeholder="https://..." />
-        </div>
-
         <section class="form-section">
           <div class="field" style="margin-bottom: 1rem">
             <label class="field-label" for="edit-title">Títol</label>
@@ -338,6 +311,15 @@ async function toggleFavorite() {
           <div class="field" style="margin-bottom: 1rem">
             <label class="field-label" for="edit-description">Descripció</label>
             <textarea id="edit-description" v-model="editDescription" class="textarea" rows="2" />
+          </div>
+
+          <div class="field" style="margin-bottom: 1rem">
+            <label class="field-label" for="edit-category">Categoria</label>
+            <select id="edit-category" v-model="editCategory" class="input">
+              <option v-for="key in CATEGORY_KEYS" :key="key" :value="key">
+                {{ CATEGORY_LABELS[key] }}
+              </option>
+            </select>
           </div>
 
           <div class="form-grid">
@@ -372,22 +354,16 @@ async function toggleFavorite() {
           <div class="season-grid">
             <button
               v-for="option in SEASON_OPTIONS"
-              :key="option.name"
+              :key="option.key"
               type="button"
               class="season-option"
-              :class="[`tone-${option.tone}`, { 'is-selected': editSeason === option.name }]"
-              :aria-pressed="editSeason === option.name"
-              @click="editSeason = editSeason === option.name ? null : option.name"
+              :class="[`tone-${option.tone}`, { 'is-selected': editSeason === option.key }]"
+              :aria-pressed="editSeason === option.key"
+              @click="editSeason = editSeason === option.key ? null : option.key"
             >
               <span class="material-symbols-outlined">{{ option.icon }}</span>
-              <span>{{ option.name }}</span>
+              <span>{{ option.label }}</span>
             </button>
-          </div>
-
-          <div class="field" style="margin-top: 1.25rem">
-            <label class="field-label" for="edit-tags">Etiquetes</label>
-            <input id="edit-tags" v-model="editTagsText" type="text" class="input" />
-            <span class="field-hint">Separa les etiquetes amb comes.</span>
           </div>
         </section>
 
