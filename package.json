@@ -20,6 +20,7 @@
     "db:logs": "docker compose logs -f db",
     "db:generate": "pnpm --filter @receptari/api db:generate",
     "db:migrate": "pnpm --filter @receptari/api db:migrate",
+    "db:seed": "pnpm --filter @receptari/api db:seed",
     "db:push": "pnpm --filter @receptari/api db:push",
     "db:studio": "pnpm --filter @receptari/api db:studio",
     "format": "prettier --write \"**/*.{ts,vue,json,md}\" --ignore-path .gitignore"
