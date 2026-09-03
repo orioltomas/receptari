@@ -29,17 +29,61 @@ describe('createRecipesApi', () => {
     fetcher.mockReset();
   });
 
-  it('list crida GET /api/recipes sense query si q és buit', async () => {
-    fetcher.mockResolvedValueOnce([]);
+  it('list crida GET /api/recipes sense query si no hi ha filtres', async () => {
+    fetcher.mockResolvedValueOnce({ items: [], total: 0 });
     await api.list();
     expect(fetcher).toHaveBeenCalledWith('http://api.test:3000/api/recipes', {
       query: undefined,
     });
   });
 
-  it('list envia query si q és present', async () => {
-    fetcher.mockResolvedValueOnce([]);
-    await api.list({ q: 'tomàquet' });
+  it('list retorna la pàgina i el total', async () => {
+    const page = { items: [{ id: 'a' }], total: 42 };
+    fetcher.mockResolvedValueOnce(page);
+    const result = await api.list();
+    expect(result).toBe(page);
+    expect(result.total).toBe(42);
+  });
+
+  it('list envia tots els filtres, l’ordre i la paginació', async () => {
+    fetcher.mockResolvedValueOnce({ items: [], total: 0 });
+    await api.list({
+      q: 'tomàquet',
+      category: 'lunch',
+      season: 'summer',
+      difficulty: 'easy',
+      time: 'lt30',
+      sort: 'alpha',
+      limit: 6,
+      offset: 12,
+    });
+    expect(fetcher).toHaveBeenCalledWith('http://api.test:3000/api/recipes', {
+      query: {
+        q: 'tomàquet',
+        category: 'lunch',
+        season: 'summer',
+        difficulty: 'easy',
+        time: 'lt30',
+        sort: 'alpha',
+        limit: '6',
+        offset: '12',
+      },
+    });
+  });
+
+  it('list envia offset 0 en lloc d’ometre’l', async () => {
+    fetcher.mockResolvedValueOnce({ items: [], total: 0 });
+    await api.list({ offset: 0 });
+    expect(fetcher).toHaveBeenCalledWith('http://api.test:3000/api/recipes', {
+      query: { offset: '0' },
+    });
+  });
+
+  it('search retorna només els elements de la pàgina', async () => {
+    const item = { id: 'a' };
+    fetcher.mockResolvedValueOnce({ items: [item], total: 1 });
+    const result = await api.search('tomàquet');
+    expect(result).toEqual([item]);
     expect(fetcher).toHaveBeenCalledWith('http://api.test:3000/api/recipes', {
       query: { q: 'tomàquet' },
     });

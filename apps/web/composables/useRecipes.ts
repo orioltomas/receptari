@@ -2,6 +2,7 @@ import type {
   CreateRecipeInput,
   ListRecipesQuery,
   Recipe,
+  RecipeListResponse,
   RecipeSummary,
   UpdateRecipeInput,
 } from '@receptari/shared';
@@ -27,11 +28,22 @@ export function createRecipesApi(baseUrl: string, fetcher: typeof $fetch = $fetc
     return buildApiUrl(baseUrl, path, query);
   }
 
-  async function list(query: Partial<ListRecipesQuery> = {}): Promise<RecipeSummary[]> {
+  /**
+   * Every filter, the sort and the paging are the API's job — nothing here is
+   * computed client-side. Returns a page plus the unpaged total.
+   */
+  async function list(query: Partial<ListRecipesQuery> = {}): Promise<RecipeListResponse> {
     const queryParams: Record<string, string> = {};
     if (query.q) queryParams.q = query.q;
+    if (query.category) queryParams.category = query.category;
+    if (query.season) queryParams.season = query.season;
+    if (query.difficulty) queryParams.difficulty = query.difficulty;
+    if (query.time) queryParams.time = query.time;
+    if (query.sort) queryParams.sort = query.sort;
+    if (query.limit != null) queryParams.limit = String(query.limit);
+    if (query.offset != null) queryParams.offset = String(query.offset);
 
-    return await fetcher<RecipeSummary[]>(url('/api/recipes'), {
+    return await fetcher<RecipeListResponse>(url('/api/recipes'), {
       query: Object.keys(queryParams).length > 0 ? queryParams : undefined,
     });
   }
@@ -52,8 +64,10 @@ export function createRecipesApi(baseUrl: string, fetcher: typeof $fetch = $fetc
     await fetcher(url(`/api/recipes/${id}`), { method: 'DELETE' });
   }
 
+  /** Convenience for a plain text search that only cares about the page. */
   async function search(q: string): Promise<RecipeSummary[]> {
-    return list({ q });
+    const { items } = await list({ q });
+    return items;
   }
 
   return { list, get, create, update, remove, search };
