@@ -20,16 +20,16 @@ const { ingredients, recipes, steps } = schema;
 const __dirname = dirname(fileURLToPath(import.meta.url));
 loadDotenv({ path: resolve(__dirname, '..', '..', '.env') });
 
-/** Classification keys (HR-007). Stored as keys, never as Catalan labels. */
+/** Classification keys. Stored as keys, never as Catalan labels. */
 type Category = 'breakfast' | 'lunch' | 'dinner' | 'dessert' | 'snack' | 'bread';
 type Season = 'spring' | 'summer' | 'autumn' | 'winter' | 'all_year';
 type Difficulty = 'easy' | 'medium' | 'hard';
 
 interface SeedIngredient {
   name: string;
-  /** Free-form; may be absent entirely (HR-009). When present it is > 0. */
+  /** Free-form; may be absent entirely. When present it is > 0. */
   quantity?: number;
-  /** Free text, at most 60 characters (HR-009). */
+  /** Free text, at most 60 characters. */
   unit?: string;
 }
 
@@ -49,7 +49,7 @@ interface SeedRecipe {
   category: Category;
   season: Season | null;
   difficulty: Difficulty | null;
-  /** At least one of each — HR-001. */
+  /** At least one of each. */
   ingredients: SeedIngredient[];
   steps: SeedStep[];
 }
@@ -62,7 +62,7 @@ interface SeedRecipe {
  * plus one recipe with no times at all, and steps with and without the optional
  * title and duration.
  *
- * No tags, no image and no favourite flag exist here — HR-007, HR-008, HR-011.
+ * No tags, no image and no favourite flag exist here.
  */
 const SEED_RECIPES: SeedRecipe[] = [
   {
@@ -354,7 +354,7 @@ function buildSearchText(title: string, ings: Array<{ name: string }>): string {
 }
 
 async function seed(db: Database): Promise<void> {
-  // Idempotent: deleting the recipes cascades to ingredients and steps (HR-006).
+  // Idempotent: deleting the recipes cascades to ingredients and steps.
   await db.delete(recipes);
 
   for (const recipe of SEED_RECIPES) {
