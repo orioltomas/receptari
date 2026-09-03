@@ -4,7 +4,7 @@ title: Rebuild the web pages against the new design
 status: ready
 created: 2026-09-03
 owner: orioltomas
-hard_rules: [HR-001, HR-003, HR-004, HR-006]
+hard_rules: [HR-001, HR-006, HR-009, HR-010, HR-011, HR-013]
 depends_on: [001]
 ---
 
@@ -53,7 +53,7 @@ the Heirloom & Harvest system, with no page left that the design does not have.
 |---|---|
 | `/` (Inici) | **deleted**; `/` now serves the catalogue |
 | `/cerca` | **merged into `/`**; keep a redirect from `/cerca` |
-| `/favorits` | **deleted**; favourites become a filter on `/` |
+| `/favorits` | **deleted**; favourites are removed entirely (HR-011) |
 | `/recipes/new` | unchanged |
 | `/recipes/[id]` | detail only — the inline edit mode is removed |
 | — | `/recipes/[id]/edit` — **new**, the add form preloaded |
@@ -69,12 +69,14 @@ users.
 - Editorial header: "Catàleg d'Índex", lead paragraph.
 - Search field, debounced, driving `q`.
 - Filter chips: **Per Categoria** (the six short labels), **Per Temporada**
-  (four seasons + Tot l'any), **Temps** (`< 30 min` / `30-60 min` / `+1 hora`),
-  and a **Favorits** toggle replacing the deleted page.
+  (four seasons + Tot l'any) and **Temps** (`< 30 min` / `30-60 min` /
+  `+1 hora`). There is **no Favorits toggle** — favourites are removed by
+  HR-011 and return only with multi-user (HR-012).
 - "Totes les Receptes (N)" using `total` from the API.
 - Sort dropdown: Més recents / Alfabètic (A-Z) / Temps de preparació.
-- Recipe cards with category and season chips, a bookmark (favourite) toggle,
-  time / servings / difficulty metadata, description, and "Veure recepta".
+- Recipe cards with category and season chips, time / servings / difficulty
+  metadata, description, and "Veure recepta". The design's bookmark icon is
+  dropped (HR-011).
 - "Mostrant X de N receptes registrades" plus a "Carrega'n més" button that
   raises `offset` and appends.
 - Every filter, the sort and the paging go to the API (spec 001) — none of them
@@ -144,12 +146,14 @@ legible on dark. Both themes must pass WCAG AA for body text.
 - [ ] `index.vue` and `favorits.vue` no longer exist; `/cerca` redirects to `/`.
 - [ ] The nav has exactly Cerca, Afegir and the theme toggle — no `person` icon.
 - [ ] Every catalogue filter, the sort and "Carrega'n més" produce an API request; none is computed in the page.
-- [ ] The favourites toggle on `/` returns the same set the deleted page did.
 - [ ] The detail scaler doubles a 4-serving recipe's numeric quantities and leaves "al gust" untouched.
 - [ ] Ticking an ingredient survives no reload — the state is deliberately ephemeral.
 - [ ] Printing the detail page yields ingredients and steps with no nav or buttons.
 - [ ] Deleting asks for confirmation and states that it is permanent.
 - [ ] Saving with no ingredients, or with no steps, shows the error and does not call the API.
+- [ ] Typing a quantity the form cannot interpret (e.g. `0`) tells the user instead of silently saving `null` (HR-009).
+- [ ] The detail page has no empty-ingredients state — it is unreachable once the API enforces HR-001.
+- [ ] The notes field surfaces the 2000-character limit before submit rather than failing on save (HR-013).
 - [ ] Reloading mid-form restores the draft; saving clears it.
 - [ ] `/recipes/[id]/edit` loads the recipe and saves it back with no field lost.
 - [ ] A recipe with a null season and a null difficulty renders without empty slots.
@@ -157,10 +161,16 @@ legible on dark. Both themes must pass WCAG AA for body text.
 
 ## Decisions taken
 
-- `/` is the catalogue; Inici and Favorits are deleted, favourites become a filter.
+- `/` is the catalogue; Inici and Favorits are deleted. Favourites are removed
+  altogether (HR-011), not turned into a filter — the original plan to make them
+  a chip on `/` was dropped by the 2026-09-03 hard-rules audit.
 - Edit reuses the add form on its own route; inline edit is removed.
-- The unit dropdown is open, not closed (HR-003).
+- The unit dropdown is open, not closed (HR-009, which superseded HR-003).
 - The scaler and the ingredient checkboxes are display-only, never persisted.
+- The form never loses typed input silently: an uninterpretable quantity is
+  reported, not discarded (HR-009).
+- The 2000-char cap on notes is shown in the form, and stays a Zod rule with no
+  DB constraint (HR-013).
 - Dark mode is kept and its palette derived from the light design.
 
 ## Open questions

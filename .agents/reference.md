@@ -15,19 +15,21 @@ optional and their slots are simply hidden when absent. Category carries two
 label sets: a short one for filter chips and cards, a longer descriptive one for
 the add/edit form.
 
-## Favorite (`isFavorite`)
-A boolean flag on a recipe. There is no separate favourites collection: a
-favourite is a recipe with `isFavorite = true`, and `/favorits` is the recipe
-list filtered by it. It is toggled through its own endpoint
-(`POST /recipes/:id/favorite`), not through the recipe update endpoint, and it is
-the one field exempt from the full-replace rule (HR-004).
+## Favorite — *removed (pending specs 001 and 002)*
+Recipes used to carry a global `isFavorite` boolean, toggled through
+`POST /recipes/:id/favorite` and exempt from the full-replace rule. Favourites
+are **removed entirely** (HR-011) because a single global boolean is the wrong
+shape for the multi-user direction (HR-012): once each registered user saves
+their own, a favourite is a `user × recipe` relation, not a field of the recipe.
+They return only with the multi-user work, and never as a column on `recipes`.
 
 ## Ingredient
 A line of a recipe's ingredient list: `name` plus an optional `quantity` and
 `unit`. Both are nullable — "sal al gust" is a valid ingredient with no
-quantity. `unit` is free text, not a controlled vocabulary. Ingredients are
-ordered by `position` and have no existence outside their recipe (they cascade
-on delete).
+quantity. `unit` is free text, not a controlled vocabulary, capped at 60
+characters (HR-009); a quantity, when present, is greater than zero. Ingredients
+are ordered by `position` and have no existence outside their recipe (they
+cascade on delete).
 
 ## Position
 The 0-based ordering index of an ingredient or a step within its recipe. It is
@@ -36,18 +38,22 @@ in the request payload. Callers reorder by reordering the array.
 
 ## Recipe (recepta)
 The root aggregate: title, description, notes, times, servings, classification,
-plus its ingredients and steps. It has **no image** (HR-008). There are no users
-and no ownership — the whole database is one person's collection.
+plus its ingredients and steps. It has **no image** (HR-008). Today there are no
+users and no ownership, but that is the current state, not a decision: the app is
+headed for multi-user, where every recipe has an author who alone may edit or
+delete it (HR-012).
 
 ## Receptari
-The collection of every recipe in the app. Since there is a single implicit
-user, "el receptari" and "all recipes" are the same set. The word is not a
-domain entity, only the product name.
+The collection of every recipe in the app. While there is a single implicit
+user, "el receptari" and "all recipes" are the same set — that stops being true
+once recipes have authors (HR-012). The word is not a domain entity, only the
+product name.
 
 ## RecipeSummary
 The shape returned by the list endpoint: the recipe without its `notes`,
 `ingredients` and `steps`, plus a computed `ingredientCount`. Cards and lists
-use this; only the detail page fetches the full `Recipe`. The endpoint returns
+use this; only the detail page fetches the full `Recipe`. It carries no
+favourite flag (HR-011). The endpoint returns
 `{ items, total }` rather than a bare array, because the catalogue shows both a
 page and the unpaged count.
 
