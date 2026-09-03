@@ -1,10 +1,10 @@
 ---
 id: 001
 title: Rework the recipe model and API for the new design
-status: ready
+status: in-progress
 created: 2026-09-03
 owner: orioltomas
-hard_rules: [HR-001, HR-002, HR-003, HR-005, HR-006]
+hard_rules: [HR-001, HR-003, HR-004, HR-005, HR-006, HR-007, HR-008]
 ---
 
 # Rework the recipe model and API for the new design
@@ -217,15 +217,29 @@ and behaves identically on both drivers.
 ## Decisions taken
 
 - Category, season and difficulty become real columns and `tags` is removed
-  entirely → **HR-002 must be superseded**, it describes tag storage that will
-  no longer exist.
-- The recipe collection carries no images → **new hard rule needed**.
+  entirely → HR-002 described tag storage that will no longer exist, and has
+  been **superseded by HR-007**. Already recorded.
+- The recipe collection carries no images → recorded as **HR-008**. Already
+  recorded.
 - Unit selection is a UI suggestion, not a constraint → HR-003 stands unchanged.
 - Steps gain an optional title and duration; notes stay a single free-text
   field; no pairing field; no folio number.
 - Sorting and paging move to the server.
 - Accent-insensitivity via an application-maintained `search_text` column, since
   PGlite has no `unaccent`. Technical decision, not a business rule.
+
+## Issues
+
+Created 2026-09-03 with `/spec-to-issues` (`orioltomas/receptari`):
+
+- #2 — Recipe model foundation: classification, step fields, no images, `search_text` (blocking)
+- #3 — `GET /recipes`: filtering, sorting, paging and accent-insensitive search (blocked by #2)
+- #4 — Seed script and `pnpm db:seed` (blocked by #2)
+- #5 — Minimal web compile patch after the recipe model change (blocked by #2)
+
+#3, #4 and #5 can run in parallel once #2 lands. #5 exists because removing
+`tags` and `imageUrl` breaks `apps/web`'s typecheck before spec 002 rebuilds
+the pages; it is a mechanical compile patch, not a redesign.
 
 ## Open questions
 
