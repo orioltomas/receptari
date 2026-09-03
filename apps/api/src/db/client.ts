@@ -1,4 +1,5 @@
 import { PGlite } from '@electric-sql/pglite';
+import { pg_trgm } from '@electric-sql/pglite/contrib/pg_trgm';
 import { drizzle as drizzlePglite, type PgliteDatabase } from 'drizzle-orm/pglite';
 import { drizzle as drizzlePostgres, type PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 import { type PgDatabase, type PgQueryResultHKT } from 'drizzle-orm/pg-core';
@@ -12,6 +13,16 @@ import * as schema from './schema.js';
 export type Database = PgDatabase<PgQueryResultHKT, typeof schema>;
 
 export const PGLITE_PREFIX = 'pglite://';
+
+/**
+ * Extensions que PGlite ha de carregar. `pg_trgm` es distribueix amb PGlite
+ * però només està disponible si es registra en construir el client; l'índex
+ * `recipes_search_text_trgm_idx` el necessita.
+ */
+export const PGLITE_EXTENSIONS = { pg_trgm };
+
+/** DDL que ha d'existir abans d'aplicar les migracions (índex GIN trigram). */
+export const CREATE_EXTENSIONS_SQL = 'CREATE EXTENSION IF NOT EXISTS pg_trgm;';
 
 export function isPgliteUrl(url: string): boolean {
   return url.startsWith(PGLITE_PREFIX);
@@ -28,7 +39,9 @@ export function isPgliteUrl(url: string): boolean {
 export function createDb(databaseUrl: string): Database {
   if (isPgliteUrl(databaseUrl)) {
     const dataDir = parsePglitePath(databaseUrl);
-    const client = dataDir ? new PGlite(dataDir) : new PGlite();
+    const client = dataDir
+      ? new PGlite(dataDir, { extensions: PGLITE_EXTENSIONS })
+      : new PGlite({ extensions: PGLITE_EXTENSIONS });
     return drizzlePglite(client, { schema }) as unknown as Database;
   }
 
