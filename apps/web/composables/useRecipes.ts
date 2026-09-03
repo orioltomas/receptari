@@ -27,10 +27,9 @@ export function createRecipesApi(baseUrl: string, fetcher: typeof $fetch = $fetc
     return buildApiUrl(baseUrl, path, query);
   }
 
-  async function list(query: ListRecipesQuery = {}): Promise<RecipeSummary[]> {
+  async function list(query: Partial<ListRecipesQuery> = {}): Promise<RecipeSummary[]> {
     const queryParams: Record<string, string> = {};
     if (query.q) queryParams.q = query.q;
-    if (query.favorite != null) queryParams.favorite = String(query.favorite);
 
     return await fetcher<RecipeSummary[]>(url('/api/recipes'), {
       query: Object.keys(queryParams).length > 0 ? queryParams : undefined,
@@ -53,22 +52,11 @@ export function createRecipesApi(baseUrl: string, fetcher: typeof $fetch = $fetc
     await fetcher(url(`/api/recipes/${id}`), { method: 'DELETE' });
   }
 
-  async function toggleFavorite(id: string, isFavorite: boolean): Promise<Recipe> {
-    return await fetcher<Recipe>(url(`/api/recipes/${id}/favorite`), {
-      method: 'POST',
-      body: { isFavorite },
-    });
-  }
-
-  async function listFavorites(): Promise<RecipeSummary[]> {
-    return list({ favorite: true });
-  }
-
   async function search(q: string): Promise<RecipeSummary[]> {
     return list({ q });
   }
 
-  return { list, get, create, update, remove, toggleFavorite, listFavorites, search };
+  return { list, get, create, update, remove, search };
 }
 
 export function useRecipes() {

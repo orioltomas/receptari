@@ -61,11 +61,11 @@ describe('createRecipesApi', () => {
       prepTimeMinutes: null,
       cookTimeMinutes: null,
       servings: null,
-      imageUrl: null,
-      isFavorite: false,
-      tags: [] as string[],
-      ingredients: [],
-      steps: [{ instruction: 'A' }],
+      category: 'lunch' as const,
+      season: null,
+      difficulty: null,
+      ingredients: [{ name: 'Sal', quantity: null, unit: null }],
+      steps: [{ title: null, instruction: 'A', durationMinutes: null }],
     };
     fetcher.mockResolvedValueOnce({});
     await api.create(payload);
@@ -83,11 +83,11 @@ describe('createRecipesApi', () => {
       prepTimeMinutes: null,
       cookTimeMinutes: null,
       servings: null,
-      imageUrl: null,
-      isFavorite: false,
-      tags: [] as string[],
-      ingredients: [],
-      steps: [{ instruction: 'A' }],
+      category: 'lunch' as const,
+      season: null,
+      difficulty: null,
+      ingredients: [{ name: 'Sal', quantity: null, unit: null }],
+      steps: [{ title: null, instruction: 'A', durationMinutes: null }],
     };
     fetcher.mockResolvedValueOnce({});
     await api.update('id1', payload);

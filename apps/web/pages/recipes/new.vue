@@ -1,5 +1,20 @@
 <script setup lang="ts">
-import type { CreateRecipeInput } from '@receptari/shared';
+import {
+  CATEGORY_KEYS,
+  type CategoryKey,
+  type CreateRecipeInput,
+  type SeasonKey,
+} from '@receptari/shared';
+
+// Etiquetes catalanes provisionals: la taula definitiva arriba amb l'especificació 002.
+const CATEGORY_LABELS: Record<CategoryKey, string> = {
+  breakfast: 'Esmorzars',
+  lunch: 'Dinars',
+  dinner: 'Sopars',
+  dessert: 'Postres',
+  snack: 'Berenars',
+  bread: 'Pans',
+};
 
 definePageMeta({ title: 'Nova recepta' });
 
@@ -18,24 +33,14 @@ const notes = ref<string | null>(null);
 const prepTime = ref('');
 const cookTime = ref('');
 const servings = ref('');
-const imageUrl = ref<string | null>(null);
-const tagsText = ref('');
-const season = ref<string | null>(null);
-const showImageInput = ref(false);
+const category = ref<CategoryKey>('lunch');
+const season = ref<SeasonKey | null>(null);
 
 const ingredients = ref<IngredientDraft[]>([{ quantityText: '', name: '' }]);
 const steps = ref<StepDraft[]>([{ instruction: '' }]);
 
 const submitting = ref(false);
 const error = ref<string | null>(null);
-
-function onPhotoClick() {
-  showImageInput.value = true;
-}
-
-watch(imageUrl, (value) => {
-  if (value && value.trim().length > 0) showImageInput.value = true;
-});
 
 function addIngredient() {
   ingredients.value.push({ quantityText: '', name: '' });
@@ -59,11 +64,6 @@ function moveStep(i: number, dir: -1 | 1) {
   steps.value.splice(target, 0, item);
 }
 
-function buildTags(): string[] {
-  const others = parseTags(tagsText.value).filter((t) => !isSeasonTag(t));
-  return [...(season.value ? [season.value] : []), ...others].slice(0, 10);
-}
-
 function buildPayload(): CreateRecipeInput {
   return {
     title: title.value.trim(),
@@ -72,9 +72,9 @@ function buildPayload(): CreateRecipeInput {
     prepTimeMinutes: numOrNull(prepTime.value),
     cookTimeMinutes: numOrNull(cookTime.value),
     servings: numOrNull(servings.value),
-    imageUrl: imageUrl.value?.trim() || null,
-    isFavorite: false,
-    tags: buildTags(),
+    category: category.value,
+    season: season.value,
+    difficulty: null,
     ingredients: ingredients.value
       .filter((i) => i.name.trim().length > 0)
       .map((i) => {
@@ -83,7 +83,7 @@ function buildPayload(): CreateRecipeInput {
       }),
     steps: steps.value
       .filter((s) => s.instruction.trim().length > 0)
-      .map((s) => ({ instruction: s.instruction.trim() })),
+      .map((s) => ({ title: null, instruction: s.instruction.trim(), durationMinutes: null })),
   };
 }
 
@@ -122,25 +122,6 @@ async function onSubmit() {
     </header>
 
     <form @submit.prevent="onSubmit">
-      <!-- Foto (opcional) -->
-      <button type="button" class="photo-drop" :class="{ 'has-image': imageUrl }" @click="onPhotoClick">
-        <img v-if="imageUrl" :src="imageUrl" alt="Vista prèvia de la recepta" />
-        <span class="material-symbols-outlined ms-fill">image</span>
-        <span class="photo-drop-title">Afegeix una foto de la recepta</span>
-        <span class="photo-drop-hint">Opcional</span>
-      </button>
-
-      <div v-if="showImageInput" class="field photo-url-field">
-        <label class="field-label" for="recipe-image">URL de la imatge</label>
-        <input
-          id="recipe-image"
-          v-model="imageUrl"
-          type="url"
-          class="input"
-          placeholder="https://..."
-        />
-      </div>
-
       <!-- Informació bàsica -->
       <section class="form-section">
         <div class="field" style="margin-bottom: 1rem">
@@ -164,6 +145,15 @@ async function onSubmit() {
             rows="2"
             placeholder="Una línia breu que resumeixi la recepta..."
           />
+        </div>
+
+        <div class="field" style="margin-bottom: 1rem">
+          <label class="field-label" for="recipe-category">Categoria</label>
+          <select id="recipe-category" v-model="category" class="input">
+            <option v-for="key in CATEGORY_KEYS" :key="key" :value="key">
+              {{ CATEGORY_LABELS[key] }}
+            </option>
+          </select>
         </div>
 
         <div class="form-grid">
@@ -223,28 +213,16 @@ async function onSubmit() {
         <div class="season-grid">
           <button
             v-for="option in SEASON_OPTIONS"
-            :key="option.name"
+            :key="option.key"
             type="button"
             class="season-option"
-            :class="[`tone-${option.tone}`, { 'is-selected': season === option.name }]"
-            :aria-pressed="season === option.name"
-            @click="season = season === option.name ? null : option.name"
+            :class="[`tone-${option.tone}`, { 'is-selected': season === option.key }]"
+            :aria-pressed="season === option.key"
+            @click="season = season === option.key ? null : option.key"
           >
             <span class="material-symbols-outlined">{{ option.icon }}</span>
-            <span>{{ option.name }}</span>
+            <span>{{ option.label }}</span>
           </button>
-        </div>
-
-        <div class="field" style="margin-top: 1.25rem">
-          <label class="field-label" for="recipe-tags">Etiquetes</label>
-          <input
-            id="recipe-tags"
-            v-model="tagsText"
-            type="text"
-            class="input"
-            placeholder="Cremós, Del camp, Ràpid..."
-          />
-          <span class="field-hint">Separa les etiquetes amb comes.</span>
         </div>
       </section>
 

@@ -22,7 +22,6 @@ function toggleTheme() {
 const navItems = [
   { to: '/', label: 'Inici', icon: 'home' },
   { to: '/recipes/new', label: 'Afegir', icon: 'add_circle' },
-  { to: '/favorits', label: 'Favorits', icon: 'favorite' },
   { to: '/cerca', label: 'Cerca', icon: 'search' },
 ] as const;
 </script>
