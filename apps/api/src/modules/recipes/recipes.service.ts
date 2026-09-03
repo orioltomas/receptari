@@ -38,7 +38,7 @@ export class RecipesService {
 
     const conditions: SQL[] = [];
 
-    // HR-005: search covers the title and the ingredient names, both already
+    // Search covers the title and the ingredient names, both already
     // normalised into `search_text`. Every word must match one of them.
     if (q) {
       for (const word of normalizeForSearch(q).split(/\s+/).filter(Boolean)) {
@@ -283,7 +283,7 @@ function escapeLike(value: string): string {
 
 /**
  * `recipes.search_text`: el títol normalitzat més el nom normalitzat de cada
- * ingredient, units per espais (HR-005). Es reescriu dins la mateixa
+ * ingredient, units per espais. Es reescriu dins la mateixa
  * transacció a cada create i update.
  */
 function buildSearchText(title: string, ings: Array<{ name: string }>): string {

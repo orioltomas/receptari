@@ -116,7 +116,7 @@ describe('GET /api/recipes — filtres, ordenació, paginació i cerca', () => {
     });
   });
 
-  describe('cerca (HR-005)', () => {
+  describe('cerca per títol i per nom d\'ingredient', () => {
     it('és insensible als accents', async () => {
       await seedSearchFixtures();
       const res = await list('?q=arros&sort=alpha');
@@ -296,7 +296,7 @@ describe('GET /api/recipes — filtres, ordenació, paginació i cerca', () => {
       }
     });
 
-    it('no admet cap filtre de preferits (HR-011)', async () => {
+    it('ignora un paràmetre favorite: els preferits ja no existeixen', async () => {
       await create({ title: 'Qualsevol', category: 'lunch' });
       // `favorite` does not exist: it is ignored and filters nothing.
       const res = await list('?favorite=true');
