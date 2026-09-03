@@ -1,6 +1,5 @@
-import { relations } from 'drizzle-orm';
+import { relations, sql } from 'drizzle-orm';
 import {
-  boolean,
   index,
   integer,
   numeric,
@@ -21,13 +20,19 @@ export const recipes = pgTable(
     prepTimeMinutes: integer('prep_time_minutes'),
     cookTimeMinutes: integer('cook_time_minutes'),
     servings: integer('servings'),
-    imageUrl: text('image_url'),
-    isFavorite: boolean('is_favorite').default(false).notNull(),
-    tags: text('tags'),
+    category: varchar('category', { length: 20 }).notNull(),
+    season: varchar('season', { length: 20 }),
+    difficulty: varchar('difficulty', { length: 20 }),
+    searchText: text('search_text').default('').notNull(),
     createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
     updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
   },
-  (t) => [index('recipes_created_at_idx').on(t.createdAt)],
+  (t) => [
+    index('recipes_created_at_idx').on(t.createdAt),
+    index('recipes_category_idx').on(t.category),
+    index('recipes_title_idx').on(t.title),
+    index('recipes_search_text_trgm_idx').using('gin', sql`${t.searchText} gin_trgm_ops`),
+  ],
 );
 
 export const ingredients = pgTable(
@@ -39,7 +44,7 @@ export const ingredients = pgTable(
       .references(() => recipes.id, { onDelete: 'cascade' }),
     name: varchar('name', { length: 200 }).notNull(),
     quantity: numeric('quantity', { precision: 12, scale: 4 }),
-    unit: varchar('unit', { length: 20 }),
+    unit: varchar('unit', { length: 60 }),
     position: integer('position').notNull(),
   },
   (t) => [index('ingredients_recipe_position_idx').on(t.recipeId, t.position)],
@@ -53,7 +58,9 @@ export const steps = pgTable(
       .notNull()
       .references(() => recipes.id, { onDelete: 'cascade' }),
     position: integer('position').notNull(),
+    title: varchar('title', { length: 120 }),
     instruction: text('instruction').notNull(),
+    durationMinutes: integer('duration_minutes'),
   },
   (t) => [index('steps_recipe_position_idx').on(t.recipeId, t.position)],
 );

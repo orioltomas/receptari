@@ -37,11 +37,6 @@ const recipesRoutes: FastifyPluginAsync = async (fastify: FastifyInstance) => {
     return service.update(id, input);
   });
 
-  fastify.post<{ Params: { id: string } }>('/recipes/:id/favorite', async (request) => {
-    const { id } = idParamsSchema.parse(request.params);
-    return service.setFavorite(id, request.body);
-  });
-
   fastify.delete<{ Params: { id: string } }>('/recipes/:id', async (request, reply) => {
     const { id } = idParamsSchema.parse(request.params);
     await service.remove(id);

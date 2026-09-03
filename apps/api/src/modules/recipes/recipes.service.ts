@@ -1,12 +1,16 @@
 import {
   createRecipeInputSchema,
+  normalizeForSearch,
   updateRecipeInputSchema,
+  type CategoryKey,
   type CreateRecipeInput,
+  type DifficultyKey,
   type Recipe,
   type RecipeSummary,
+  type SeasonKey,
   type UpdateRecipeInput,
 } from '@receptari/shared';
-import { and, count, desc, eq, ilike, sql } from 'drizzle-orm';
+import { and, count, desc, eq, ilike } from 'drizzle-orm';
 import { z } from 'zod';
 import type { Database } from '../../db/client.js';
 import { ingredients, recipes, steps } from '../../db/schema.js';
@@ -15,13 +19,7 @@ import { NotFoundError } from '../../plugins/error-handler.js';
 const idParamSchema = z.object({ id: z.string().uuid() });
 const listQuerySchema = z.object({
   q: z.string().trim().optional(),
-  favorite: z
-    .string()
-    .transform((v) => v === 'true')
-    .optional(),
 });
-
-const toggleFavoriteSchema = z.object({ isFavorite: z.boolean() });
 
 type ListQuery = z.infer<typeof listQuerySchema>;
 
@@ -33,9 +31,6 @@ export class RecipesService {
     if (query.q) {
       conditions.push(ilike(recipes.title, `%${query.q}%`));
     }
-    if (query.favorite) {
-      conditions.push(eq(recipes.isFavorite, true));
-    }
     const where = conditions.length > 0 ? and(...conditions) : undefined;
 
     const rows = await this.db
@@ -46,9 +41,9 @@ export class RecipesService {
         prepTimeMinutes: recipes.prepTimeMinutes,
         cookTimeMinutes: recipes.cookTimeMinutes,
         servings: recipes.servings,
-        imageUrl: recipes.imageUrl,
-        isFavorite: recipes.isFavorite,
-        tags: recipes.tags,
+        category: recipes.category,
+        season: recipes.season,
+        difficulty: recipes.difficulty,
         createdAt: recipes.createdAt,
         updatedAt: recipes.updatedAt,
         ingredientCount: count(ingredients.id),
@@ -66,9 +61,9 @@ export class RecipesService {
       prepTimeMinutes: r.prepTimeMinutes,
       cookTimeMinutes: r.cookTimeMinutes,
       servings: r.servings,
-      imageUrl: r.imageUrl,
-      isFavorite: r.isFavorite,
-      tags: parseTags(r.tags),
+      category: r.category as CategoryKey,
+      season: r.season as SeasonKey | null,
+      difficulty: r.difficulty as DifficultyKey | null,
       ingredientCount: Number(r.ingredientCount ?? 0),
       createdAt: r.createdAt.toISOString(),
       updatedAt: r.updatedAt.toISOString(),
@@ -110,9 +105,10 @@ export class RecipesService {
           prepTimeMinutes: data.prepTimeMinutes,
           cookTimeMinutes: data.cookTimeMinutes,
           servings: data.servings,
-          imageUrl: data.imageUrl,
-          isFavorite: data.isFavorite,
-          tags: serializeTags(data.tags),
+          category: data.category,
+          season: data.season,
+          difficulty: data.difficulty,
+          searchText: buildSearchText(data.title, data.ingredients),
         })
         .returning();
 
@@ -120,27 +116,25 @@ export class RecipesService {
         throw new Error('No s\'ha pogut crear la recepta');
       }
 
-      if (data.ingredients.length > 0) {
-        await tx.insert(ingredients).values(
-          data.ingredients.map((ing, idx) => ({
-            recipeId: inserted.id,
-            name: ing.name,
-            quantity: ing.quantity?.toString() ?? null,
-            unit: ing.unit,
-            position: idx,
-          })),
-        );
-      }
+      await tx.insert(ingredients).values(
+        data.ingredients.map((ing, idx) => ({
+          recipeId: inserted.id,
+          name: ing.name,
+          quantity: ing.quantity?.toString() ?? null,
+          unit: ing.unit,
+          position: idx,
+        })),
+      );
 
-      if (data.steps.length > 0) {
-        await tx.insert(steps).values(
-          data.steps.map((step, idx) => ({
-            recipeId: inserted.id,
-            instruction: step.instruction,
-            position: idx,
-          })),
-        );
-      }
+      await tx.insert(steps).values(
+        data.steps.map((step, idx) => ({
+          recipeId: inserted.id,
+          title: step.title,
+          instruction: step.instruction,
+          durationMinutes: step.durationMinutes,
+          position: idx,
+        })),
+      );
 
       const created = await tx.query.recipes.findFirst({
         where: eq(recipes.id, inserted.id),
@@ -180,9 +174,10 @@ export class RecipesService {
           prepTimeMinutes: data.prepTimeMinutes,
           cookTimeMinutes: data.cookTimeMinutes,
           servings: data.servings,
-          imageUrl: data.imageUrl,
-          isFavorite: data.isFavorite,
-          tags: serializeTags(data.tags),
+          category: data.category,
+          season: data.season,
+          difficulty: data.difficulty,
+          searchText: buildSearchText(data.title, data.ingredients),
           updatedAt: new Date(),
         })
         .where(eq(recipes.id, recipeId));
@@ -190,27 +185,25 @@ export class RecipesService {
       await tx.delete(ingredients).where(eq(ingredients.recipeId, recipeId));
       await tx.delete(steps).where(eq(steps.recipeId, recipeId));
 
-      if (data.ingredients.length > 0) {
-        await tx.insert(ingredients).values(
-          data.ingredients.map((ing, idx) => ({
-            recipeId,
-            name: ing.name,
-            quantity: ing.quantity?.toString() ?? null,
-            unit: ing.unit,
-            position: idx,
-          })),
-        );
-      }
+      await tx.insert(ingredients).values(
+        data.ingredients.map((ing, idx) => ({
+          recipeId,
+          name: ing.name,
+          quantity: ing.quantity?.toString() ?? null,
+          unit: ing.unit,
+          position: idx,
+        })),
+      );
 
-      if (data.steps.length > 0) {
-        await tx.insert(steps).values(
-          data.steps.map((step, idx) => ({
-            recipeId,
-            instruction: step.instruction,
-            position: idx,
-          })),
-        );
-      }
+      await tx.insert(steps).values(
+        data.steps.map((step, idx) => ({
+          recipeId,
+          title: step.title,
+          instruction: step.instruction,
+          durationMinutes: step.durationMinutes,
+          position: idx,
+        })),
+      );
 
       const updated = await tx.query.recipes.findFirst({
         where: eq(recipes.id, recipeId),
@@ -235,38 +228,18 @@ export class RecipesService {
       throw new NotFoundError(`Recepta ${recipeId} no trobada`);
     }
   }
-
-  async setFavorite(id: string, body: unknown): Promise<Recipe> {
-    const { id: recipeId } = idParamSchema.parse({ id });
-    const { isFavorite } = toggleFavoriteSchema.parse(body);
-
-    const existing = await this.db.query.recipes.findFirst({
-      where: eq(recipes.id, recipeId),
-    });
-    if (!existing) {
-      throw new NotFoundError(`Recepta ${recipeId} no trobada`);
-    }
-
-    await this.db
-      .update(recipes)
-      .set({ isFavorite, updatedAt: new Date() })
-      .where(eq(recipes.id, recipeId));
-
-    return this.getById(recipeId);
-  }
 }
 
-function serializeTags(tags?: string[] | null): string | null {
-  if (!tags || tags.length === 0) return null;
-  return tags.join(',');
-}
-
-function parseTags(raw: string | null): string[] {
-  if (!raw) return [];
-  return raw
-    .split(',')
-    .map((t) => t.trim())
-    .filter(Boolean);
+/**
+ * `recipes.search_text`: el títol normalitzat més el nom normalitzat de cada
+ * ingredient, units per espais (HR-005). Es reescriu dins la mateixa
+ * transacció a cada create i update.
+ */
+function buildSearchText(title: string, ings: Array<{ name: string }>): string {
+  return [title, ...ings.map((i) => i.name)]
+    .map((part) => normalizeForSearch(part))
+    .join(' ')
+    .trim();
 }
 
 function mapRecipe(row: {
@@ -277,9 +250,9 @@ function mapRecipe(row: {
   prepTimeMinutes: number | null;
   cookTimeMinutes: number | null;
   servings: number | null;
-  imageUrl: string | null;
-  isFavorite: boolean;
-  tags: string | null;
+  category: string;
+  season: string | null;
+  difficulty: string | null;
   createdAt: Date;
   updatedAt: Date;
   ingredients: Array<{
@@ -289,7 +262,13 @@ function mapRecipe(row: {
     unit: string | null;
     position: number;
   }>;
-  steps: Array<{ id: string; position: number; instruction: string }>;
+  steps: Array<{
+    id: string;
+    position: number;
+    title: string | null;
+    instruction: string;
+    durationMinutes: number | null;
+  }>;
 }): Recipe {
   return {
     id: row.id,
@@ -299,9 +278,9 @@ function mapRecipe(row: {
     prepTimeMinutes: row.prepTimeMinutes,
     cookTimeMinutes: row.cookTimeMinutes,
     servings: row.servings,
-    imageUrl: row.imageUrl,
-    isFavorite: row.isFavorite,
-    tags: parseTags(row.tags),
+    category: row.category as CategoryKey,
+    season: row.season as SeasonKey | null,
+    difficulty: row.difficulty as DifficultyKey | null,
     ingredients: row.ingredients.map((i) => ({
       id: i.id,
       name: i.name,
@@ -312,7 +291,9 @@ function mapRecipe(row: {
     steps: row.steps.map((s) => ({
       id: s.id,
       position: s.position,
+      title: s.title,
       instruction: s.instruction,
+      durationMinutes: s.durationMinutes,
     })),
     createdAt: row.createdAt.toISOString(),
     updatedAt: row.updatedAt.toISOString(),

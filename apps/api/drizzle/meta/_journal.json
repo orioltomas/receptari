@@ -15,6 +15,13 @@
       "when": 1788304076639,
       "tag": "0001_red_dracula",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1788466932345,
+      "tag": "0002_illegal_colleen_wing",
+      "breakpoints": true
     }
   ]
 }

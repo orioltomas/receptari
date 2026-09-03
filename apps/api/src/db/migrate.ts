@@ -7,7 +7,13 @@ import { migrate as migratePglite } from 'drizzle-orm/pglite/migrator';
 import { drizzle as drizzlePostgres } from 'drizzle-orm/postgres-js';
 import { migrate as migratePostgres } from 'drizzle-orm/postgres-js/migrator';
 import postgres from 'postgres';
-import { PGLITE_PREFIX, isPgliteUrl, schema } from './client.js';
+import {
+  CREATE_EXTENSIONS_SQL,
+  PGLITE_EXTENSIONS,
+  PGLITE_PREFIX,
+  isPgliteUrl,
+  schema,
+} from './client.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 loadDotenv({ path: resolve(__dirname, '..', '..', '.env') });
@@ -24,7 +30,10 @@ async function main() {
   if (isPgliteUrl(url)) {
     const dataDir = parsePglitePath(url);
     console.log(`🐘 PGlite → ${dataDir ?? '(in-memory)'}`);
-    const client = dataDir ? new PGlite(dataDir) : new PGlite();
+    const client = dataDir
+      ? new PGlite(dataDir, { extensions: PGLITE_EXTENSIONS })
+      : new PGlite({ extensions: PGLITE_EXTENSIONS });
+    await client.exec(CREATE_EXTENSIONS_SQL);
     const db = drizzlePglite(client, { schema });
     await migratePglite(db, { migrationsFolder: folder });
     await client.close();
@@ -34,6 +43,7 @@ async function main() {
 
   console.log(`🐘 Postgres → ${url.replace(/:[^:@/]+@/, ':***@')}`);
   const client = postgres(url, { max: 1 });
+  await client.unsafe(CREATE_EXTENSIONS_SQL);
   const db = drizzlePostgres(client, { schema });
   await migratePostgres(db, { migrationsFolder: folder });
   await client.end();
