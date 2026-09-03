@@ -21,3 +21,6 @@ data
 
 # Vendored agent skills (restore from skills-lock.json)
 .agents/skills
+
+# Claude Code agent worktrees
+.claude/
