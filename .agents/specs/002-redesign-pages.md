@@ -1,7 +1,7 @@
 ---
 id: 002
 title: Rebuild the web pages against the new design
-status: ready
+status: in-progress
 created: 2026-09-03
 owner: orioltomas
 hard_rules: [HR-001, HR-006, HR-009, HR-010, HR-011, HR-013]
@@ -93,7 +93,7 @@ users.
 - **Ingredients** with a servings scaler (− / +): quantities scale
   proportionally from the recipe's stored `servings`; an ingredient with a null
   quantity ("al gust") never changes; units are displayed verbatim, never
-  converted (HR-003). The scaled value is display-only and is never saved.
+  converted (HR-009). The scaled value is display-only and is never saved.
 - Ingredient checkboxes strike through when ticked. State is ephemeral in the
   browser, never persisted.
 - **Notes** rendered from the single `notes` field.
@@ -109,7 +109,7 @@ users.
 ### `/recipes/new` and `/recipes/[id]/edit` — Add / Edit
 
 One shared form component; the edit route preloads the recipe and PATCHes,
-the new route POSTs. HR-004 means both send the complete recipe.
+the new route POSTs. HR-010 means both send the complete recipe.
 
 - Section 01 — title (required), description, servings stepper, prep and cook
   minutes, difficulty selector, season selector, category selector (required,
@@ -117,7 +117,8 @@ the new route POSTs. HR-004 means both send the complete recipe.
 - Section 02 — the ingredients table: quantity, unit, name, and a remove button
   per row, plus "Afegir ingredient". The unit control is a **suggestion
   dropdown that also accepts free text** (g, ml, unitats, cullerada sopera,
-  culleradeta, pessic, branqueta, litres) — HR-003 forbids a closed list.
+  culleradeta, pessic, branqueta, litres) — HR-009 forbids a closed list, and
+  caps a unit at 60 characters.
 - Section 03 — steps with the optional title, the instruction, and the optional
   duration, reorderable by position, plus "Afegir pas".
 - Notes field. The design's "Maridatge" block is written inside notes; there is
@@ -172,6 +173,22 @@ legible on dark. Both themes must pass WCAG AA for body text.
 - The 2000-char cap on notes is shown in the form, and stays a Zod rule with no
   DB constraint (HR-013).
 - Dark mode is kept and its palette derived from the light design.
+
+## Issues
+
+Created 2026-09-03 with `/spec-to-issues` (`orioltomas/receptari`):
+
+- #6 — Design system: Playfair Display, spacing scale, WCAG AA (no dependencies)
+- #7 — Web foundation: Catalan labels, quantity helpers, scaler, API client (blocked by spec 001 #2, #3)
+- #8 — App shell: nav reduced to Cerca, Afegir, theme toggle (blocked by #5)
+- #9 — Catalogue at `/`: server-side search, filters, sort, paging (blocked by #7)
+- #10 — Recipe detail: scaler, print, share, delete confirmation (blocked by #7)
+- #11 — Add/edit form: one component, two routes, draft autosave (blocked by #7)
+
+#6 can start immediately — it is pure CSS and typography and touches nothing
+spec 001 changes. #7 is this spec's foundation, the web counterpart of #2;
+#9, #10 and #11 run in parallel once it lands and share no file. #8 depends only
+on #5, not on #7.
 
 ## Open questions
 
