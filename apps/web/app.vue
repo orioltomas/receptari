@@ -19,10 +19,12 @@ function toggleTheme() {
   localStorage.setItem('receptari-theme', isDark.value ? 'dark' : 'light');
 }
 
+// The two destinations of the app shell. Both links use exact matching, so a
+// nav entry is highlighted only on its own route: `/` would otherwise match
+// every route, and the detail and edit routes are not nav destinations.
 const navItems = [
-  { to: '/', label: 'Inici', icon: 'home' },
+  { to: '/', label: 'Cerca', icon: 'search' },
   { to: '/recipes/new', label: 'Afegir', icon: 'add_circle' },
-  { to: '/cerca', label: 'Cerca', icon: 'search' },
 ] as const;
 </script>
 
@@ -67,6 +69,7 @@ const navItems = [
           class="bottom-nav-link"
           exact-active-class="is-active"
           :aria-label="item.label"
+          :title="item.label"
         >
           <span class="material-symbols-outlined">{{ item.icon }}</span>
         </NuxtLink>
@@ -77,6 +80,7 @@ const navItems = [
           class="bottom-nav-link"
           type="button"
           :aria-label="isDark ? 'Canviar a mode clar' : 'Canviar a mode fosc'"
+          :title="isDark ? 'Mode clar' : 'Mode fosc'"
           @click="toggleTheme"
         >
           <span class="material-symbols-outlined">{{ isDark ? 'light_mode' : 'dark_mode' }}</span>
