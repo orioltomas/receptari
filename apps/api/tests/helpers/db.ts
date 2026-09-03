@@ -24,7 +24,7 @@ export async function createTestDb(): Promise<{ db: TestDatabase; close: () => P
 }
 
 async function runMigrations(client: PGlite): Promise<void> {
-  const migrationsDir = join(__dirname, '..', 'drizzle');
+  const migrationsDir = join(__dirname, '..', '..', 'drizzle');
   let files: string[] = [];
   try {
     files = readdirSync(migrationsDir)

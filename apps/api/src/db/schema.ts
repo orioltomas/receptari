@@ -1,5 +1,6 @@
 import { relations } from 'drizzle-orm';
 import {
+  boolean,
   index,
   integer,
   numeric,
@@ -20,6 +21,9 @@ export const recipes = pgTable(
     prepTimeMinutes: integer('prep_time_minutes'),
     cookTimeMinutes: integer('cook_time_minutes'),
     servings: integer('servings'),
+    imageUrl: text('image_url'),
+    isFavorite: boolean('is_favorite').default(false).notNull(),
+    tags: text('tags'),
     createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
     updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
   },

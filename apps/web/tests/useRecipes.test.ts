@@ -61,6 +61,9 @@ describe('createRecipesApi', () => {
       prepTimeMinutes: null,
       cookTimeMinutes: null,
       servings: null,
+      imageUrl: null,
+      isFavorite: false,
+      tags: [] as string[],
       ingredients: [],
       steps: [{ instruction: 'A' }],
     };
@@ -80,6 +83,9 @@ describe('createRecipesApi', () => {
       prepTimeMinutes: null,
       cookTimeMinutes: null,
       servings: null,
+      imageUrl: null,
+      isFavorite: false,
+      tags: [] as string[],
       ingredients: [],
       steps: [{ instruction: 'A' }],
     };

@@ -4,9 +4,8 @@ import type { CreateRecipeInput } from '@receptari/shared';
 definePageMeta({ title: 'Nova recepta' });
 
 interface IngredientDraft {
+  quantityText: string;
   name: string;
-  quantity: number | null;
-  unit: string | null;
 }
 
 interface StepDraft {
@@ -16,18 +15,30 @@ interface StepDraft {
 const title = ref('');
 const description = ref<string | null>(null);
 const notes = ref<string | null>(null);
-const prepTime = ref<number | null>(null);
-const cookTime = ref<number | null>(null);
-const servings = ref<number | null>(null);
+const prepTime = ref('');
+const cookTime = ref('');
+const servings = ref('');
+const imageUrl = ref<string | null>(null);
+const tagsText = ref('');
+const season = ref<string | null>(null);
+const showImageInput = ref(false);
 
-const ingredients = ref<IngredientDraft[]>([{ name: '', quantity: null, unit: null }]);
+const ingredients = ref<IngredientDraft[]>([{ quantityText: '', name: '' }]);
 const steps = ref<StepDraft[]>([{ instruction: '' }]);
 
 const submitting = ref(false);
 const error = ref<string | null>(null);
 
+function onPhotoClick() {
+  showImageInput.value = true;
+}
+
+watch(imageUrl, (value) => {
+  if (value && value.trim().length > 0) showImageInput.value = true;
+});
+
 function addIngredient() {
-  ingredients.value.push({ name: '', quantity: null, unit: null });
+  ingredients.value.push({ quantityText: '', name: '' });
 }
 function removeIngredient(i: number) {
   ingredients.value.splice(i, 1);
@@ -48,21 +59,28 @@ function moveStep(i: number, dir: -1 | 1) {
   steps.value.splice(target, 0, item);
 }
 
+function buildTags(): string[] {
+  const others = parseTags(tagsText.value).filter((t) => !isSeasonTag(t));
+  return [...(season.value ? [season.value] : []), ...others].slice(0, 10);
+}
+
 function buildPayload(): CreateRecipeInput {
   return {
     title: title.value.trim(),
     description: description.value?.trim() || null,
     notes: notes.value?.trim() || null,
-    prepTimeMinutes: prepTime.value,
-    cookTimeMinutes: cookTime.value,
-    servings: servings.value,
+    prepTimeMinutes: numOrNull(prepTime.value),
+    cookTimeMinutes: numOrNull(cookTime.value),
+    servings: numOrNull(servings.value),
+    imageUrl: imageUrl.value?.trim() || null,
+    isFavorite: false,
+    tags: buildTags(),
     ingredients: ingredients.value
       .filter((i) => i.name.trim().length > 0)
-      .map((i) => ({
-        name: i.name.trim(),
-        quantity: i.quantity,
-        unit: i.unit?.trim() || null,
-      })),
+      .map((i) => {
+        const { quantity, unit } = parseQuantityInput(i.quantityText);
+        return { name: i.name.trim(), quantity, unit };
+      }),
     steps: steps.value
       .filter((s) => s.instruction.trim().length > 0)
       .map((s) => ({ instruction: s.instruction.trim() })),
@@ -94,201 +112,262 @@ async function onSubmit() {
 </script>
 
 <template>
-  <div>
-    <h1 class="page-title">Nova recepta</h1>
+  <div class="form-page">
+    <header class="page-header">
+      <h1 class="display-lg">Nova Recepta</h1>
+      <p class="page-lead">
+        Comparteix la teva última creació culinària. Afegeix els detalls perquè
+        quedi registrada amb la màxima precisió.
+      </p>
+    </header>
 
-    <form class="form" @submit.prevent="onSubmit">
-      <section class="card-section">
-        <h2>Informació general</h2>
+    <form @submit.prevent="onSubmit">
+      <!-- Foto (opcional) -->
+      <button type="button" class="photo-drop" :class="{ 'has-image': imageUrl }" @click="onPhotoClick">
+        <img v-if="imageUrl" :src="imageUrl" alt="Vista prèvia de la recepta" />
+        <span class="material-symbols-outlined ms-fill">image</span>
+        <span class="photo-drop-title">Afegeix una foto de la recepta</span>
+        <span class="photo-drop-hint">Opcional</span>
+      </button>
 
-        <div class="field">
-          <label>Títol *</label>
-          <InputText v-model="title" placeholder="Ex: Pa amb tomàquet" />
+      <div v-if="showImageInput" class="field photo-url-field">
+        <label class="field-label" for="recipe-image">URL de la imatge</label>
+        <input
+          id="recipe-image"
+          v-model="imageUrl"
+          type="url"
+          class="input"
+          placeholder="https://..."
+        />
+      </div>
+
+      <!-- Informació bàsica -->
+      <section class="form-section">
+        <div class="field" style="margin-bottom: 1rem">
+          <label class="field-label" for="recipe-title">Títol de la recepta</label>
+          <input
+            id="recipe-title"
+            v-model="title"
+            type="text"
+            class="input input--lg"
+            placeholder="Ex: Risotto de bolets de temporada"
+            required
+          />
         </div>
 
-        <div class="field">
-          <label>Descripció</label>
-          <Textarea v-model="description" rows="2" autoResize placeholder="Una línia breu..." />
+        <div class="field" style="margin-bottom: 1rem">
+          <label class="field-label" for="recipe-description">Descripció</label>
+          <textarea
+            id="recipe-description"
+            v-model="description"
+            class="textarea"
+            rows="2"
+            placeholder="Una línia breu que resumeixi la recepta..."
+          />
         </div>
 
-        <div class="grid-3">
+        <div class="form-grid">
           <div class="field">
-            <label>Temps prep (min)</label>
-            <InputNumber v-model="prepTime" :min="0" :max="9999" />
+            <label class="field-label" for="servings">Comensals</label>
+            <div class="icon-field">
+              <span class="material-symbols-outlined">group</span>
+              <input
+                id="servings"
+                v-model="servings"
+                type="number"
+                class="input"
+                min="1"
+                max="999"
+                placeholder="4 persones"
+              />
+            </div>
           </div>
           <div class="field">
-            <label>Temps cocció (min)</label>
-            <InputNumber v-model="cookTime" :min="0" :max="9999" />
+            <label class="field-label" for="prep-time">Temps de preparació (min)</label>
+            <div class="icon-field">
+              <span class="material-symbols-outlined">schedule</span>
+              <input
+                id="prep-time"
+                v-model="prepTime"
+                type="number"
+                class="input"
+                min="0"
+                max="9999"
+                placeholder="30"
+              />
+            </div>
           </div>
           <div class="field">
-            <label>Racions</label>
-            <InputNumber v-model="servings" :min="1" :max="999" />
+            <label class="field-label" for="cook-time">Temps de cocció (min)</label>
+            <div class="icon-field">
+              <span class="material-symbols-outlined">local_fire_department</span>
+              <input
+                id="cook-time"
+                v-model="cookTime"
+                type="number"
+                class="input"
+                min="0"
+                max="9999"
+                placeholder="45"
+              />
+            </div>
           </div>
         </div>
       </section>
 
-      <section class="card-section">
+      <!-- Temporada -->
+      <section class="form-section">
         <div class="section-header">
-          <h2>Ingredients</h2>
-          <Button label="Afegir" icon="pi pi-plus" size="small" severity="secondary" @click="addIngredient" />
+          <h2 class="section-title">Temporada ideal</h2>
+        </div>
+        <div class="season-grid">
+          <button
+            v-for="option in SEASON_OPTIONS"
+            :key="option.name"
+            type="button"
+            class="season-option"
+            :class="[`tone-${option.tone}`, { 'is-selected': season === option.name }]"
+            :aria-pressed="season === option.name"
+            @click="season = season === option.name ? null : option.name"
+          >
+            <span class="material-symbols-outlined">{{ option.icon }}</span>
+            <span>{{ option.name }}</span>
+          </button>
+        </div>
+
+        <div class="field" style="margin-top: 1.25rem">
+          <label class="field-label" for="recipe-tags">Etiquetes</label>
+          <input
+            id="recipe-tags"
+            v-model="tagsText"
+            type="text"
+            class="input"
+            placeholder="Cremós, Del camp, Ràpid..."
+          />
+          <span class="field-hint">Separa les etiquetes amb comes.</span>
+        </div>
+      </section>
+
+      <!-- Ingredients -->
+      <section class="form-section">
+        <div class="section-header">
+          <h2 class="section-title">
+            <span class="material-symbols-outlined">kitchen</span>
+            Ingredients
+          </h2>
         </div>
 
         <div v-for="(ing, i) in ingredients" :key="i" class="ingredient-row">
-          <InputText v-model="ing.name" placeholder="Nom" class="grow" />
-          <InputNumber v-model="ing.quantity" :min="0" placeholder="Quantitat" :max-fraction-digits="3" />
-          <InputText v-model="ing.unit" placeholder="Unitat (g, ml, ...)" />
-          <Button
-            icon="pi pi-trash"
-            severity="danger"
-            text
-            rounded
-            :disabled="ingredients.length === 1"
-            @click="removeIngredient(i)"
+          <input
+            v-model="ing.quantityText"
+            type="text"
+            class="input ingredient-qty"
+            placeholder="Quantitat (ex: 200g)"
+            :aria-label="`Quantitat de l'ingredient ${i + 1}`"
           />
+          <input
+            v-model="ing.name"
+            type="text"
+            class="input ingredient-name"
+            placeholder="Ingredient (ex: Arròs Arborio)"
+            :aria-label="`Nom de l'ingredient ${i + 1}`"
+          />
+          <button
+            type="button"
+            class="icon-btn icon-btn-danger"
+            :disabled="ingredients.length === 1"
+            :aria-label="`Eliminar ingredient ${i + 1}`"
+            @click="removeIngredient(i)"
+          >
+            <span class="material-symbols-outlined">close</span>
+          </button>
         </div>
+
+        <button type="button" class="add-row-btn" @click="addIngredient">
+          <span class="material-symbols-outlined">add</span>
+          Afegir Ingredient
+        </button>
       </section>
 
-      <section class="card-section">
+      <!-- Passos -->
+      <section class="form-section">
         <div class="section-header">
-          <h2>Passos</h2>
-          <Button label="Afegir" icon="pi pi-plus" size="small" severity="secondary" @click="addStep" />
+          <h2 class="section-title">
+            <span class="material-symbols-outlined">menu_book</span>
+            Pas a pas
+          </h2>
+          <button type="button" class="add-row-btn" @click="addStep">
+            <span class="material-symbols-outlined">add</span>
+            Afegir pas
+          </button>
         </div>
 
         <div v-for="(step, i) in steps" :key="i" class="step-row">
           <span class="step-num">{{ i + 1 }}</span>
-          <Textarea v-model="step.instruction" rows="2" autoResize placeholder="Descriu el pas..." class="grow" />
+          <textarea
+            v-model="step.instruction"
+            class="textarea"
+            rows="2"
+            placeholder="Descriu el pas..."
+            :aria-label="`Pas ${i + 1}`"
+          />
           <div class="step-actions">
-            <Button icon="pi pi-arrow-up" text rounded :disabled="i === 0" @click="moveStep(i, -1)" />
-            <Button icon="pi pi-arrow-down" text rounded :disabled="i === steps.length - 1" @click="moveStep(i, 1)" />
-            <Button
-              icon="pi pi-trash"
-              severity="danger"
-              text
-              rounded
+            <button
+              type="button"
+              class="icon-btn"
+              :disabled="i === 0"
+              aria-label="Moure amunt"
+              @click="moveStep(i, -1)"
+            >
+              <span class="material-symbols-outlined">arrow_upward</span>
+            </button>
+            <button
+              type="button"
+              class="icon-btn"
+              :disabled="i === steps.length - 1"
+              aria-label="Moure avall"
+              @click="moveStep(i, 1)"
+            >
+              <span class="material-symbols-outlined">arrow_downward</span>
+            </button>
+            <button
+              type="button"
+              class="icon-btn icon-btn-danger"
               :disabled="steps.length === 1"
+              :aria-label="`Eliminar pas ${i + 1}`"
               @click="removeStep(i)"
-            />
+            >
+              <span class="material-symbols-outlined">close</span>
+            </button>
           </div>
         </div>
       </section>
 
-      <section class="card-section">
-        <h2>Notes</h2>
-        <Textarea v-model="notes" rows="3" autoResize placeholder="Variacions, trucs, maridatge..." />
+      <!-- Notes -->
+      <section class="form-section">
+        <div class="section-header">
+          <h2 class="section-title">Notes addicionals</h2>
+        </div>
+        <div class="field">
+          <textarea
+            v-model="notes"
+            class="textarea"
+            rows="3"
+            placeholder="Suggeriments de maridatge, possibles substitucions d'ingredients, o consells personals..."
+          />
+          <span class="field-hint">Opcional</span>
+        </div>
       </section>
 
       <p v-if="error" class="error">{{ error }}</p>
 
-      <div class="actions">
-        <NuxtLink to="/"><Button label="Cancel·lar" severity="secondary" /></NuxtLink>
-        <Button type="submit" label="Crear recepta" icon="pi pi-check" :loading="submitting" />
+      <div class="actions-row">
+        <NuxtLink to="/" class="btn-ghost">Cancel·lar</NuxtLink>
+        <button type="submit" class="btn-primary" :disabled="submitting">
+          <span class="material-symbols-outlined">save</span>
+          {{ submitting ? 'Guardant...' : 'Guardar Recepta' }}
+        </button>
       </div>
     </form>
   </div>
 </template>
-
-<style scoped>
-.form {
-  display: flex;
-  flex-direction: column;
-  gap: 1.5rem;
-}
-
-.card-section {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  padding: 1.5rem;
-}
-
-.card-section h2 {
-  margin: 0 0 1rem;
-  font-size: 1.125rem;
-}
-
-.section-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 1rem;
-}
-
-.section-header h2 {
-  margin: 0;
-}
-
-.field {
-  display: flex;
-  flex-direction: column;
-  gap: 0.4rem;
-  margin-bottom: 1rem;
-}
-
-.field label {
-  font-size: 0.875rem;
-  color: var(--muted);
-  font-weight: 500;
-}
-
-.grid-3 {
-  display: grid;
-  gap: 1rem;
-  grid-template-columns: repeat(3, 1fr);
-}
-
-.ingredient-row {
-  display: grid;
-  gap: 0.5rem;
-  grid-template-columns: 2fr 1fr 1fr auto;
-  margin-bottom: 0.5rem;
-  align-items: center;
-}
-
-.grow {
-  width: 100%;
-}
-
-.step-row {
-  display: grid;
-  grid-template-columns: auto 1fr auto;
-  gap: 0.75rem;
-  margin-bottom: 0.75rem;
-  align-items: start;
-}
-
-.step-num {
-  background: var(--p-primary-color, #10b981);
-  color: #fff;
-  width: 2rem;
-  height: 2rem;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: 600;
-  font-size: 0.875rem;
-  flex-shrink: 0;
-  margin-top: 0.25rem;
-}
-
-.step-actions {
-  display: flex;
-  gap: 0.25rem;
-  margin-top: 0.25rem;
-}
-
-.actions {
-  display: flex;
-  gap: 1rem;
-  justify-content: flex-end;
-}
-
-.error {
-  background: #fee;
-  color: #c33;
-  padding: 0.75rem 1rem;
-  border-radius: 6px;
-  border: 1px solid #fcc;
-  margin: 0;
-}
-</style>
