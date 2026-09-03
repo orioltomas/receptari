@@ -1,7 +1,7 @@
 import { z } from 'zod';
 
 /**
- * Claus estables de classificació (HR-007). Mai s'hi guarda l'etiqueta
+ * Claus estables de classificació. Mai s'hi guarda l'etiqueta
  * catalana: les etiquetes són presentació i viuen a l'app web.
  */
 export const CATEGORY_KEYS = [
@@ -24,7 +24,7 @@ export const difficultySchema = z.enum(DIFFICULTY_KEYS);
 export const ingredientSchema = z.object({
   name: z.string().min(1, 'El nom és obligatori').max(200),
   quantity: z.number().positive().nullable().default(null),
-  // Text lliure sense vocabulari controlat, però limitat a 60 caràcters (HR-009).
+  // Text lliure sense vocabulari controlat, però limitat a 60 caràcters.
   unit: z.string().max(60).nullable().default(null),
   position: z.number().int().nonnegative(),
 });
@@ -78,7 +78,7 @@ export const recipeSummarySchema = z.object({
 
 export const createRecipeInputSchema = z.object({
   title: z.string().min(1).max(200),
-  // El límit de 2000 caràcters és una decisió de producte (HR-013): viu aquí i
+  // El límit de 2000 caràcters és una decisió de producte: viu aquí i
   // mai com a restricció de la columna.
   description: z.string().max(2000).nullable().default(null),
   notes: z.string().max(2000).nullable().default(null),
@@ -98,7 +98,7 @@ export const createRecipeInputSchema = z.object({
     .default([]),
 });
 
-// Desar una recepta la substitueix sencera, sense excepcions (HR-010).
+// Desar una recepta la substitueix sencera, sense excepcions.
 export const updateRecipeInputSchema = createRecipeInputSchema;
 
 export const listRecipesQuerySchema = z.object({
