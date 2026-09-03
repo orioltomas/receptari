@@ -103,7 +103,7 @@ describe('Recipes API', () => {
       expect(res.json().error).toBe('ValidationError');
     });
 
-    it('rebutja una recepta sense ingredients (HR-001)', async () => {
+    it('rebutja una recepta sense cap ingredient', async () => {
       const res = await app.inject({
         method: 'POST',
         url: '/api/recipes',
@@ -167,7 +167,7 @@ describe('Recipes API', () => {
       expect(res.json()).toMatchObject({ season: null, difficulty: null });
     });
 
-    it('accepta una unitat llarga de text lliure (HR-009)', async () => {
+    it('accepta una unitat de text lliure de fins a 60 caràcters', async () => {
       const res = await app.inject({
         method: 'POST',
         url: '/api/recipes',
@@ -265,7 +265,7 @@ describe('Recipes API', () => {
     it('retorna llista buida inicialment', async () => {
       const res = await app.inject({ method: 'GET', url: '/api/recipes' });
       expect(res.statusCode).toBe(200);
-      expect(res.json()).toEqual([]);
+      expect(res.json()).toEqual({ items: [], total: 0 });
     });
 
     it('llista receptes creades amb ingredientCount', async () => {
@@ -292,7 +292,8 @@ describe('Recipes API', () => {
 
       const res = await app.inject({ method: 'GET', url: '/api/recipes' });
       expect(res.statusCode).toBe(200);
-      const list = res.json();
+      const { items: list, total } = res.json();
+      expect(total).toBe(2);
       expect(list).toHaveLength(2);
       const amanida = list.find((r: { title: string }) => r.title === 'Amanida');
       expect(amanida.ingredientCount).toBe(2);
@@ -323,7 +324,8 @@ describe('Recipes API', () => {
 
       const res = await app.inject({ method: 'GET', url: '/api/recipes?q=aman' });
       expect(res.statusCode).toBe(200);
-      const list = res.json();
+      const { items: list, total } = res.json();
+      expect(total).toBe(1);
       expect(list).toHaveLength(1);
       expect(list[0].title).toBe('Amanida verda');
     });
@@ -394,7 +396,7 @@ describe('Recipes API', () => {
       expect(body.ingredients).toHaveLength(1);
     });
 
-    it('rebutja una actualització sense ingredients (HR-001)', async () => {
+    it('rebutja una actualització que deixa la recepta sense ingredients', async () => {
       const created = await app.inject({
         method: 'POST',
         url: '/api/recipes',
@@ -465,7 +467,7 @@ describe('Recipes API', () => {
   });
 
   describe('POST /api/recipes/:id/favorite', () => {
-    it('ja no existeix (HR-011)', async () => {
+    it('ja no existeix: retorna 404', async () => {
       const created = await app.inject({
         method: 'POST',
         url: '/api/recipes',
@@ -508,7 +510,7 @@ describe('Recipes API', () => {
       expect(get.statusCode).toBe(404);
 
       const list = await app.inject({ method: 'GET', url: '/api/recipes' });
-      expect(list.json()).toEqual([]);
+      expect(list.json()).toEqual({ items: [], total: 0 });
     });
 
     it('retorna 404 si la recepta no existeix', async () => {
