@@ -124,3 +124,11 @@ Managed by the `hard-rules` skill.
 - **Why:** the cap already existed in `createRecipeInputSchema` but was an unexplained schema detail rather than a recorded decision, so an agent could reasonably have raised or removed it while "cleaning up" the mismatch with the unbounded `text` column. 2000 characters is enough for a recipe's story and keeps list payloads bounded. The column stays `text` on purpose — the limit is a product decision, not a storage one, and moving it should not require a migration.
 - **Applies to:** `createRecipeInputSchema` in `packages/shared`, the `recipes.description` / `recipes.notes` columns.
 - **Source:** session 2026-09-03 (bootstrap hard-rules audit)
+
+## HR-014 — The Stitch design is a visual reference, never a source of business decisions
+- **Status:** active
+- **Decided:** 2026-09-06
+- **Rule:** From the Stitch project *"El Meu Receptari Digital"* (`6479379555098272991`) the app takes **colour, typography, sizing, spacing, radii and composition only**. Anything the design implies about *what exists* — a field, an entity, a capability, a permission — carries no authority. Where a screen depicts something an active hard rule forbids, the rule wins and the element is not built; where the design is silent on something the product already has, the design's silence is not a decision to remove it.
+- **Why:** the design was drawn before several rules existed and keeps depicting the app as it was, so reading it as a source of truth quietly reintroduces decisions that were deliberately taken. Three of its elements contradicted active rules at once: bookmark controls in three places (HR-011 removed favourites until they are per-user), a closed unit dropdown (HR-009 keeps units free text so "un pessic de sal marina" stays valid), and a user avatar implying a session (HR-012 — multi-user is decided but unbuilt). The converse trap is as costly: the design has no dark palette and hides its navigation on mobile, neither of which is a decision to drop a working theme or leave phones without navigation.
+- **Applies to:** every task that consults the Stitch screens — `apps/web` pages, components and `assets/css/main.css` — and any future regeneration of the design.
+- **Source:** session 2026-09-06
