@@ -1,13 +1,24 @@
 ---
 id: 003
 title: Align the web app with the Stitch design
-status: ready
+status: in-progress
 created: 2026-09-06
 owner: orioltomas
 hard_rules: [HR-006, HR-007, HR-008, HR-009, HR-011, HR-012, HR-014]
 ---
 
 # Align the web app with the Stitch design
+
+## Issues
+
+| # | Title | Depends on |
+|---|---|---|
+| [#24](https://github.com/orioltomas/receptari/issues/24) | Design tokens, fonts and stylesheet split | — |
+| [#25](https://github.com/orioltomas/receptari/issues/25) | App shell: the design's fixed top header | #24 |
+| [#26](https://github.com/orioltomas/receptari/issues/26) | Catalogue page and recipe card | #24 |
+| [#27](https://github.com/orioltomas/receptari/issues/27) | Recipe detail: two-column layout, step cards and ingredient check-off | #24 |
+| [#28](https://github.com/orioltomas/receptari/issues/28) | Add and edit form: two-column registration layout | #24 |
+| [#29](https://github.com/orioltomas/receptari/issues/29) | Contrast and visual-fidelity review | #25, #26, #27, #28 |
 
 ## Context
 
