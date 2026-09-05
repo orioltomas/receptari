@@ -1,0 +1,221 @@
+/* ============================================================
+   Receptari — design tokens
+   Type: Newsreader (display) + Work Sans (body)
+   Palette: terracotta (primary), warm brown (secondary), blue-green
+   (tertiary), cream (surface)
+
+   Custom properties only. The rules that consume them live in base.css,
+   shell.css, catalogue.css, detail.css and form.css.
+   ============================================================ */
+
+:root {
+  /* ---------- Colour (light theme) ---------- */
+  --primary: #6d2409;
+  --on-primary: #ffffff;
+  --primary-container: #8c3a1e;
+  --on-primary-container: #ffb6a0;
+  --secondary: #705a4f;
+  --on-secondary: #ffffff;
+  --secondary-container: #fbdcce;
+  --on-secondary-container: #766055;
+  --tertiary: #004251;
+  --on-tertiary: #ffffff;
+  --tertiary-container: #005b6f;
+
+  --background: #fcf9f5;
+  --surface: #fcf9f5;
+  --surface-bright: #fcf9f5;
+  --surface-container-lowest: #ffffff;
+  --surface-container-low: #f6f3ef;
+  --surface-container: #f0edea;
+  --surface-container-high: #eae8e4;
+  --surface-container-highest: #e5e2de;
+  --surface-variant: #e5e2de;
+  --surface-dim: #dcdad6;
+  --surface-tint: #9a4528;
+  --on-surface: #1c1c1a;
+  --on-surface-variant: #55433d;
+  --outline: #88726c;
+  --outline-variant: #dcc1b9;
+
+  --error: #ba1a1a;
+  --on-error: #ffffff;
+  --error-container: #ffdad6;
+  --on-error-container: #93000a;
+
+  --inverse-surface: #31302e;
+  --inverse-on-surface: #f3f0ed;
+  --inverse-primary: #ffb59e;
+
+  /* The *-fixed tones are identical in both themes: they are the anchor the
+     dark palette is derived from, which is why .dark does not redefine them. */
+  --primary-fixed: #ffdbd0;
+  --primary-fixed-dim: #ffb59e;
+  --on-primary-fixed: #390b00;
+  --on-primary-fixed-variant: #7b2e13;
+  --secondary-fixed: #fbdcce;
+  --secondary-fixed-dim: #dec1b3;
+  --on-secondary-fixed: #281810;
+  --on-secondary-fixed-variant: #574238;
+
+  /* ---------- Type ---------- */
+  --font-display: 'Newsreader', Georgia, 'Times New Roman', Times, serif;
+  --font-body: 'Work Sans', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+
+  /* Type scale. Every step has a utility class of the same name in base.css.
+     The two largest steps carry a mobile variant, applied below 768px. */
+  --headline-display-size: 44px;
+  --headline-display-line: 52px;
+  --headline-display-weight: 400;
+  --headline-display-tracking: -0.02em;
+
+  --headline-display-mobile-size: 32px;
+  --headline-display-mobile-line: 40px;
+  --headline-display-mobile-weight: 400;
+  --headline-display-mobile-tracking: -0.015em;
+
+  --headline-lg-size: 32px;
+  --headline-lg-line: 40px;
+  --headline-lg-weight: 400;
+  --headline-lg-tracking: -0.015em;
+
+  --headline-lg-mobile-size: 26px;
+  --headline-lg-mobile-line: 34px;
+  --headline-lg-mobile-weight: 400;
+  --headline-lg-mobile-tracking: -0.01em;
+
+  --headline-md-size: 22px;
+  --headline-md-line: 30px;
+  --headline-md-weight: 400;
+  --headline-md-tracking: normal;
+
+  --headline-sm-size: 18px;
+  --headline-sm-line: 24px;
+  --headline-sm-weight: 500;
+  --headline-sm-tracking: normal;
+
+  --step-numeral-size: 18px;
+  --step-numeral-line: 22px;
+  --step-numeral-weight: 400;
+  --step-numeral-tracking: 0.02em;
+
+  --body-lg-size: 17px;
+  --body-lg-line: 28px;
+  --body-lg-weight: 400;
+  --body-lg-tracking: normal;
+
+  --body-md-size: 15px;
+  --body-md-line: 24px;
+  --body-md-weight: 400;
+  --body-md-tracking: normal;
+
+  --body-sm-size: 13px;
+  --body-sm-line: 20px;
+  --body-sm-weight: 400;
+  --body-sm-tracking: normal;
+
+  --label-lg-size: 13px;
+  --label-lg-line: 18px;
+  --label-lg-weight: 500;
+  --label-lg-tracking: 0.04em;
+
+  --label-md-size: 11px;
+  --label-md-line: 16px;
+  --label-md-weight: 600;
+  --label-md-tracking: 0.08em;
+
+  --label-sm-size: 10px;
+  --label-sm-line: 14px;
+  --label-sm-weight: 600;
+  --label-sm-tracking: 0.1em;
+
+  /* ---------- Radii ---------- */
+  /* Nothing in this design is a capsule: the largest radius is 12px. */
+  --radius-xs: 2px; /* small classification chips */
+  --radius-sm: 4px; /* filter chips, inputs, selects, step cards */
+  --radius-md: 8px; /* cards, panels, form sections */
+  --radius-lg: 12px; /* nav container, season pills */
+
+  /* Temporary aliases. The detail page's scoped styles still point at these
+     names; the page issues replace them with the four above, after which
+     these can go. */
+  --radius-xl: var(--radius-md);
+  --radius-pill: var(--radius-lg);
+
+  /* ---------- Spacing ---------- */
+  --space-3xs: 0.125rem;
+  --space-2xs: 0.25rem;
+  --space-xs: 0.5rem;
+  --space-sm: 0.75rem;
+  --space-md: 1rem;
+  --space-lg: 1.5rem;
+  --space-xl: 2.25rem;
+  --space-2xl: 3.5rem;
+  --space-3xl: 5rem;
+
+  /* ---------- Layout widths ---------- */
+  --margin-mobile: 1.25rem;
+  --margin-tablet: 2.5rem;
+  --margin-desktop: 4rem;
+  --gutter-mobile: 1rem;
+  --gutter-tablet: 1.5rem;
+  --gutter-desktop: 2.5rem;
+  --journal-max-width: 72rem;
+  --column-reading-width: 42rem;
+
+  /* ---------- Shadows (tinted with on-surface, low opacity) ---------- */
+  --shadow-sm: 0 4px 20px rgba(45, 41, 38, 0.05);
+  --shadow-md: 0 4px 24px rgba(45, 41, 38, 0.08);
+  --shadow-lg: 0 8px 30px rgba(45, 41, 38, 0.08);
+  --shadow-xl: 0 16px 44px rgba(45, 41, 38, 0.18);
+}
+
+/* ---------- Colour (dark theme) ----------
+   The design ships none, so this is derived from the light palette through
+   its *-fixed and inverse-* tones: primary and secondary take the *-fixed-dim
+   tone over on-*-fixed, and the containers take on-*-fixed-variant under
+   *-fixed. Tertiary has no fixed tones, so the blue-green is lightened to an
+   equivalent tone. Every text pair holds at least 4.5:1. */
+.dark {
+  --primary: #ffb59e;
+  --on-primary: #390b00;
+  --primary-container: #7b2e13;
+  --on-primary-container: #ffdbd0;
+  --secondary: #dec1b3;
+  --on-secondary: #281810;
+  --secondary-container: #574238;
+  --on-secondary-container: #fbdcce;
+  --tertiary: #84d2e8;
+  --on-tertiary: #00363f;
+  --tertiary-container: #004e60;
+
+  --background: #1a1916;
+  --surface: #1a1916;
+  --surface-bright: #403c39;
+  --surface-container-lowest: #141310;
+  --surface-container-low: #232220;
+  --surface-container: #2a2825;
+  --surface-container-high: #35322f;
+  --surface-container-highest: #403c39;
+  --surface-variant: #403c39;
+  --surface-dim: #121110;
+  --surface-tint: #ffb59e;
+  --on-surface: #f3f0ed;
+  --on-surface-variant: #d8c3bb;
+  --outline: #a08c86;
+  --outline-variant: #55433d;
+
+  --error: #ffb4ab;
+  --on-error: #690005;
+  --error-container: #93000a;
+  --on-error-container: #ffdad6;
+
+  --inverse-surface: #f3f0ed;
+  --inverse-on-surface: #31302e;
+  --inverse-primary: #8c3a1e;
+
+  --shadow-sm: 0 4px 20px rgba(0, 0, 0, 0.25);
+  --shadow-md: 0 4px 24px rgba(0, 0, 0, 0.32);
+  --shadow-lg: 0 8px 30px rgba(0, 0, 0, 0.35);
+  --shadow-xl: 0 16px 44px rgba(0, 0, 0, 0.5);
+}
