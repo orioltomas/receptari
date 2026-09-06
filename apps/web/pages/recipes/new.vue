@@ -28,11 +28,11 @@ async function onCancel() {
 
 <template>
   <div class="form-page">
-    <header class="page-header">
-      <h1 class="display-lg">Nova Recepta</h1>
-      <p class="page-lead">
-        Comparteix la teva última creació culinària. Afegeix els detalls perquè
-        quedi registrada amb la màxima precisió.
+    <header class="form-page-header">
+      <h1 class="headline-display">Nova Recepta</h1>
+      <p class="form-page-lead">
+        Afegeix els detalls, les proporcions i el procediment per guardar la recepta al teu
+        receptari.
       </p>
     </header>
 
