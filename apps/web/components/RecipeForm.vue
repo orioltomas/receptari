@@ -507,7 +507,7 @@ function onCancel() {
   border: 1px solid var(--outline);
   background: var(--surface-container-low);
   color: var(--on-surface);
-  border-radius: 999px;
+  border-radius: var(--radius-lg);
   padding: 0.5rem 1rem;
   font-size: 0.9rem;
   cursor: pointer;

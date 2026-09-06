@@ -1,0 +1,207 @@
+/* ============================================================
+   Receptari — catalogue
+   Page header, search, filters, results grid and recipe card.
+   ============================================================ */
+
+/* ---------- Page header ---------- */
+
+.page-header {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  margin-bottom: var(--space-2xl);
+}
+
+.page-lead {
+  font-size: var(--body-lg-size);
+  line-height: var(--body-lg-line);
+  font-weight: var(--body-lg-weight);
+  color: var(--on-surface-variant);
+  max-width: var(--column-reading-width);
+}
+
+/* ---------- Search ---------- */
+
+.search-box {
+  position: relative;
+  width: 100%;
+  max-width: 48rem;
+}
+
+.search-box > .material-symbols-outlined {
+  position: absolute;
+  left: var(--space-md);
+  top: 50%;
+  translate: 0 -50%;
+  color: var(--on-surface-variant);
+  pointer-events: none;
+}
+
+.search-input {
+  width: 100%;
+  padding: var(--space-md) var(--space-lg) var(--space-md) 3rem;
+  font-size: var(--headline-sm-size);
+  line-height: var(--headline-sm-line);
+  color: var(--on-surface);
+  background: var(--surface-container-low);
+  border: none;
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-sm);
+  transition: box-shadow 0.2s;
+}
+
+.search-input::placeholder {
+  color: color-mix(in srgb, var(--on-surface-variant) 55%, transparent);
+}
+
+.search-input:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--primary), var(--shadow-sm);
+}
+
+/* ---------- Filters ---------- */
+
+.filter-group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.filter-label {
+  font-size: var(--label-sm-size);
+  line-height: var(--label-sm-line);
+  font-weight: var(--label-sm-weight);
+  letter-spacing: var(--label-sm-tracking);
+  text-transform: uppercase;
+  color: var(--on-surface-variant);
+}
+
+/* ---------- Results ---------- */
+
+.results-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-md);
+  margin-bottom: var(--space-md);
+}
+
+.results-count {
+  font-size: var(--body-sm-size);
+  line-height: var(--body-sm-line);
+  color: var(--on-surface-variant);
+}
+
+/* ---------- Grids ---------- */
+
+.recipe-grid {
+  display: grid;
+  gap: var(--space-md);
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+}
+
+.seasonal-grid {
+  display: grid;
+  gap: var(--space-md);
+  grid-template-columns: repeat(auto-fill, minmax(215px, 1fr));
+}
+
+/* ---------- Recipe card ----------
+   No media slot: the collection carries no photography, so the card is
+   text only. */
+
+.recipe-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  background: var(--surface-container-lowest);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+
+.recipe-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-lg);
+}
+
+.card-body {
+  padding: var(--space-lg);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+  flex: 1;
+}
+
+.card-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2xs);
+}
+
+.card-title {
+  font-family: var(--font-display);
+  font-size: var(--headline-md-size);
+  line-height: var(--headline-md-line);
+  font-weight: var(--headline-md-weight);
+  color: var(--on-surface);
+}
+
+.card-description {
+  color: var(--on-surface-variant);
+  font-size: var(--body-md-size);
+  line-height: var(--body-md-line);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.card-meta {
+  display: flex;
+  align-items: center;
+  gap: var(--space-lg);
+  color: var(--on-surface-variant);
+  font-size: var(--body-sm-size);
+  line-height: var(--body-sm-line);
+  text-transform: uppercase;
+}
+
+.card-meta span {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2xs);
+}
+
+.card-meta .material-symbols-outlined {
+  font-size: 1rem;
+}
+
+/* Compact variant */
+.recipe-card.compact .card-body {
+  padding: var(--space-md);
+  gap: var(--space-2xs);
+}
+
+.recipe-card.compact .card-title {
+  font-family: var(--font-body);
+  font-size: var(--body-md-size);
+  line-height: var(--body-md-line);
+  font-weight: 600;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.recipe-card.compact .card-meta {
+  justify-content: space-between;
+  margin-top: auto;
+  padding-top: var(--space-xs);
+}
+
+/* Featured variant */
+.recipe-card.featured .card-description {
+  -webkit-line-clamp: 3;
+}
