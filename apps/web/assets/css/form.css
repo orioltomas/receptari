@@ -3,7 +3,7 @@
    The two-column registration layout: page header, the 7/5 split of primary
    registration and classification, the ingredient ledger, the step cards and
    the action bar. Tokens live in tokens.css; the shared primitives (buttons,
-   .input, .textarea, chips, states) live in base.css.
+   chips, tags, states) live in base.css.
    ============================================================ */
 
 .form-page {
@@ -63,33 +63,21 @@
   }
 }
 
-/* ---------- Panels ----------
-   `.form-section` is the older name for the same panel. The recipe detail
-   page still applies it, so both names resolve to one rule until that page
-   moves its own sections into detail.css. */
+/* ---------- Panels ---------- */
 
-.form-panel,
-.form-section {
+.form-panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-lg);
   background: var(--surface-container-low);
   border-radius: var(--radius-md);
   padding: var(--space-lg);
 }
 
 @media (min-width: 768px) {
-  .form-panel,
-  .form-section {
+  .form-panel {
     padding: var(--space-xl);
   }
-}
-
-.form-panel {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-lg);
-}
-
-.form-section {
-  margin-bottom: var(--space-lg);
 }
 
 /* Caption line at the head of a panel: the numbered section marker on the
@@ -566,7 +554,9 @@
   }
 }
 
-/* ---------- Step cards ---------- */
+/* ---------- Step cards ----------
+   Prefixed `form-`: `.step-card` and `.step-instruction` also exist on the
+   recipe detail page, and every stylesheet here is global. */
 
 .step-cards {
   display: flex;
@@ -574,7 +564,7 @@
   gap: var(--space-md);
 }
 
-.step-card {
+.form-step-card {
   display: flex;
   flex-direction: column;
   gap: var(--space-xs);
@@ -584,12 +574,12 @@
 }
 
 @media (min-width: 768px) {
-  .step-card {
+  .form-step-card {
     padding: var(--space-lg);
   }
 }
 
-.step-card-head {
+.form-step-card-head {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -679,7 +669,7 @@
   margin: 0;
 }
 
-.step-instruction {
+.step-instruction-input {
   width: 100%;
   background: var(--surface-container-low);
   color: var(--on-surface);
@@ -696,18 +686,18 @@
     border-color 0.2s;
 }
 
-.step-instruction::placeholder {
+.step-instruction-input::placeholder {
   color: color-mix(in srgb, var(--on-surface-variant) 50%, transparent);
   font-style: italic;
 }
 
-.step-instruction:focus {
+.step-instruction-input:focus {
   outline: none;
   background: var(--surface-container);
   border-color: var(--primary);
 }
 
-.step-instruction:focus-visible {
+.step-instruction-input:focus-visible {
   outline: none;
 }
 

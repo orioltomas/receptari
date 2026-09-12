@@ -118,26 +118,6 @@
   }
 }
 
-/* The catalogue's chips are flat panels rather than the outlined chip the
-   form uses, so the panel restyles them locally. */
-.filter-panel .chip {
-  border: 1px solid transparent;
-  background: var(--surface-container);
-  color: var(--on-surface);
-  border-radius: var(--radius-sm);
-}
-
-.filter-panel .chip:hover {
-  background: var(--surface-container-highest);
-}
-
-.filter-panel .chip.is-selected,
-.filter-panel .chip.chip-season.is-selected {
-  background: var(--primary);
-  border-color: transparent;
-  color: var(--on-primary);
-}
-
 /* ---------- Results ---------- */
 
 .results-header {

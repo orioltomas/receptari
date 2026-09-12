@@ -47,6 +47,11 @@
   --inverse-on-surface: #f3f0ed;
   --inverse-primary: #ffb59e;
 
+  /* The modal veil. Not a Stitch value: the design has no modal, and every
+     surface tone it does define is light, so a scrim built from one would
+     brighten the page instead of dimming it. Fixed in both themes. */
+  --scrim: rgba(28, 28, 26, 0.55);
+
   /* The *-fixed tones are identical in both themes: they are the anchor the
      dark palette is derived from, which is why .dark does not redefine them. */
   --primary-fixed: #ffdbd0;
@@ -135,12 +140,6 @@
   --radius-sm: 4px; /* filter chips, inputs, selects, step cards */
   --radius-md: 8px; /* cards, panels, form sections */
   --radius-lg: 12px; /* nav container, season pills */
-
-  /* Temporary aliases. The detail page's scoped styles still point at these
-     names; the page issues replace them with the four above, after which
-     these can go. */
-  --radius-xl: var(--radius-md);
-  --radius-pill: var(--radius-lg);
 
   /* ---------- Spacing ---------- */
   --space-3xs: 0.125rem;

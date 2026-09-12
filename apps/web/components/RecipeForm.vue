@@ -438,8 +438,8 @@ function onCancel() {
       </div>
 
       <div class="step-cards">
-        <div v-for="(step, i) in state.steps" :key="i" class="step-card">
-          <div class="step-card-head">
+        <div v-for="(step, i) in state.steps" :key="i" class="form-step-card">
+          <div class="form-step-card-head">
             <span class="step-badge" aria-hidden="true">{{ i + 1 }}</span>
             <div class="step-heading">
               <input
@@ -494,7 +494,7 @@ function onCancel() {
           </div>
           <textarea
             v-model="step.instruction"
-            class="step-instruction"
+            class="step-instruction-input"
             rows="3"
             placeholder="Explica les accions d'aquest pas..."
             :aria-label="`Instrucció del pas ${i + 1}`"

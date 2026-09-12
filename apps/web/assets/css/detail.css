@@ -15,7 +15,7 @@
   align-items: center;
   justify-content: space-between;
   gap: var(--space-md);
-  margin-bottom: var(--space-lg);
+  margin-bottom: var(--space-2xl);
 }
 
 .detail-back {
@@ -120,7 +120,8 @@
 /* ---------- Header ---------- */
 
 .detail-header {
-  margin-bottom: var(--space-xl);
+  max-width: var(--column-reading-width);
+  margin-bottom: var(--space-2xl);
 }
 
 .detail-chips {
@@ -134,7 +135,7 @@
 .detail-chip {
   display: inline-flex;
   align-items: center;
-  padding: var(--space-3xs) var(--space-xs);
+  padding: var(--space-3xs) var(--space-sm);
   border-radius: var(--radius-xs);
   background: var(--surface-container-low);
   color: var(--on-surface-variant);
@@ -468,7 +469,7 @@
   align-items: baseline;
   justify-content: space-between;
   gap: var(--space-md);
-  margin-bottom: var(--space-md);
+  margin-bottom: var(--space-lg);
 }
 
 .steps-title {
@@ -506,21 +507,28 @@
   padding: 0;
   margin: 0;
   display: grid;
-  gap: var(--space-sm);
+  gap: var(--space-xl);
 }
 
 .step-card {
-  padding: var(--space-md) var(--space-lg);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+  padding: var(--space-lg);
   border-radius: var(--radius-sm);
   background: var(--surface-container-low);
+  transition: background-color 0.2s;
+}
+
+.step-card:hover {
+  background: var(--surface-container);
 }
 
 .step-card-head {
   display: flex;
-  align-items: baseline;
+  align-items: center;
   justify-content: space-between;
   gap: var(--space-sm);
-  margin-bottom: var(--space-xs);
 }
 
 .step-number {
@@ -540,17 +548,22 @@
   font-weight: var(--label-sm-weight);
   letter-spacing: var(--label-sm-tracking);
   text-transform: uppercase;
-  color: var(--on-surface-variant);
+  color: var(--secondary);
 }
 
 .step-title {
-  margin: 0 0 var(--space-2xs);
+  margin: 0;
+  transition: color 0.2s;
   font-family: var(--font-display);
   font-size: var(--headline-sm-size);
   line-height: var(--headline-sm-line);
   font-weight: var(--headline-sm-weight);
   letter-spacing: var(--headline-sm-tracking);
   color: var(--on-surface);
+}
+
+.step-card:hover .step-title {
+  color: var(--primary);
 }
 
 .step-instruction {
@@ -592,7 +605,7 @@
   align-items: center;
   justify-content: center;
   padding: var(--space-lg);
-  background: color-mix(in srgb, var(--inverse-surface) 55%, transparent);
+  background: var(--scrim);
 }
 
 .modal {
@@ -692,7 +705,6 @@
 
   /* No navigation, no buttons, no toasts — ingredients and steps only. */
   .app-header,
-  .nav-cluster,
   .bottom-nav,
   .no-print,
   button {
