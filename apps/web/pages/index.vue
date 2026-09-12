@@ -186,7 +186,7 @@ await reload();
             v-for="option in SEASON_OPTIONS"
             :key="option.key"
             type="button"
-            class="chip chip-season"
+            class="chip"
             :class="{ 'is-selected': activeSeason === option.key }"
             :aria-pressed="activeSeason === option.key"
             @click="toggleSeason(option.key)"
