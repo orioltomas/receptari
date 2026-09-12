@@ -143,89 +143,95 @@ await reload();
 <template>
   <div>
     <section class="page-header">
-      <h1 class="display-lg">Catàleg d'Índex</h1>
+      <h1 class="headline-display">Cerca</h1>
       <p class="page-lead">
         El receptari sencer, escrit a mà i sense fotografies. Cerca per nom o per
         ingredient, i filtra per categoria, temporada o temps de cuina.
       </p>
-
-      <div class="search-box">
-        <span class="material-symbols-outlined">search</span>
-        <input
-          v-model="query"
-          type="search"
-          class="search-input"
-          placeholder="Què vols cuinar avui?"
-          aria-label="Cerca receptes"
-        />
-      </div>
-
-      <div class="filters">
-        <div class="filter-group">
-          <span id="filter-category" class="filter-label">Per Categoria</span>
-          <div class="chips" role="group" aria-labelledby="filter-category">
-            <button
-              v-for="option in CATEGORY_OPTIONS"
-              :key="option.key"
-              type="button"
-              class="chip"
-              :class="{ 'is-selected': activeCategory === option.key }"
-              :aria-pressed="activeCategory === option.key"
-              @click="toggleCategory(option.key)"
-            >
-              {{ option.shortLabel }}
-            </button>
-          </div>
-        </div>
-
-        <div class="filter-group">
-          <span id="filter-season" class="filter-label">Per Temporada</span>
-          <div class="chips" role="group" aria-labelledby="filter-season">
-            <button
-              v-for="option in SEASON_OPTIONS"
-              :key="option.key"
-              type="button"
-              class="chip chip-season"
-              :class="{ 'is-selected': activeSeason === option.key }"
-              :aria-pressed="activeSeason === option.key"
-              @click="toggleSeason(option.key)"
-            >
-              <span class="material-symbols-outlined">{{ option.icon }}</span>
-              {{ option.label }}
-            </button>
-          </div>
-        </div>
-
-        <div class="filter-group">
-          <span id="filter-time" class="filter-label">Temps</span>
-          <div class="chips" role="group" aria-labelledby="filter-time">
-            <button
-              v-for="option in TIME_OPTIONS"
-              :key="option.key"
-              type="button"
-              class="chip"
-              :class="{ 'is-selected': activeTime === option.key }"
-              :aria-pressed="activeTime === option.key"
-              @click="toggleTime(option.key)"
-            >
-              {{ option.label }}
-            </button>
-          </div>
-        </div>
-      </div>
     </section>
+
+    <div class="search-box">
+      <span class="material-symbols-outlined">search</span>
+      <input
+        v-model="query"
+        type="search"
+        class="search-input"
+        placeholder="Què vols cuinar avui?"
+        aria-label="Cerca receptes"
+      />
+    </div>
+
+    <div class="filter-panel">
+      <div class="filter-row">
+        <span id="filter-category" class="filter-label">Per Categoria:</span>
+        <div class="chips" role="group" aria-labelledby="filter-category">
+          <button
+            v-for="option in CATEGORY_OPTIONS"
+            :key="option.key"
+            type="button"
+            class="chip"
+            :class="{ 'is-selected': activeCategory === option.key }"
+            :aria-pressed="activeCategory === option.key"
+            @click="toggleCategory(option.key)"
+          >
+            {{ option.shortLabel }}
+          </button>
+        </div>
+      </div>
+
+      <div class="filter-row">
+        <span id="filter-season" class="filter-label">Per Temporada:</span>
+        <div class="chips" role="group" aria-labelledby="filter-season">
+          <button
+            v-for="option in SEASON_OPTIONS"
+            :key="option.key"
+            type="button"
+            class="chip chip-season"
+            :class="{ 'is-selected': activeSeason === option.key }"
+            :aria-pressed="activeSeason === option.key"
+            @click="toggleSeason(option.key)"
+          >
+            <span class="material-symbols-outlined">{{ option.icon }}</span>
+            {{ option.label }}
+          </button>
+        </div>
+      </div>
+
+      <div class="filter-row">
+        <span id="filter-time" class="filter-label">Temps:</span>
+        <div class="chips" role="group" aria-labelledby="filter-time">
+          <button
+            v-for="option in TIME_OPTIONS"
+            :key="option.key"
+            type="button"
+            class="chip"
+            :class="{ 'is-selected': activeTime === option.key }"
+            :aria-pressed="activeTime === option.key"
+            @click="toggleTime(option.key)"
+          >
+            {{ option.label }}
+          </button>
+        </div>
+      </div>
+    </div>
 
     <section>
       <div class="results-header">
-        <h2 class="section-title">Totes les Receptes ({{ total }})</h2>
+        <h2 class="headline-lg results-title">
+          Totes les Receptes
+          <span class="results-total">({{ total }})</span>
+        </h2>
 
         <label class="sort-control">
-          <span class="sort-label">Ordena per</span>
-          <select v-model="sort" class="select sort-select">
-            <option v-for="option in SORT_OPTIONS" :key="option.key" :value="option.key">
-              {{ option.label }}
-            </option>
-          </select>
+          <span class="sort-label">Ordena per:</span>
+          <span class="sort-field">
+            <select v-model="sort" class="sort-select">
+              <option v-for="option in SORT_OPTIONS" :key="option.key" :value="option.key">
+                {{ option.label }}
+              </option>
+            </select>
+            <span class="material-symbols-outlined">expand_more</span>
+          </span>
         </label>
       </div>
 
@@ -276,53 +282,3 @@ await reload();
     </section>
   </div>
 </template>
-
-<style scoped>
-.filters {
-  display: flex;
-  flex-direction: column;
-  gap: 1.5rem;
-  margin-top: 2rem;
-}
-
-.sort-control {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.sort-label {
-  font-size: 0.75rem;
-  font-weight: 600;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--on-surface-variant);
-}
-
-.sort-select {
-  width: auto;
-  padding-block: 0.5rem;
-  font-size: 0.875rem;
-}
-
-.results-footer {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 1rem;
-  margin-top: 2rem;
-  text-align: center;
-}
-
-.retry-link {
-  margin-left: 0.5rem;
-  background: none;
-  border: none;
-  padding: 0;
-  font: inherit;
-  font-weight: 600;
-  color: inherit;
-  text-decoration: underline;
-  cursor: pointer;
-}
-</style>
