@@ -1,20 +1,155 @@
 /* ============================================================
    Receptari — recipe detail
-   Header, checkable ingredient list, steps and notes.
+   The action bar, the editorial header, the two-column body with its sticky
+   ingredients aside, the step cards, and the page's print rules.
+
+   Everything the detail page needs lives here: the page component carries no
+   styles of its own.
    ============================================================ */
 
-.detail-header {
-  display: grid;
-  gap: var(--space-xl);
-  grid-template-columns: 1fr;
-  align-items: start;
-  margin-bottom: var(--space-xl);
+/* ---------- Action bar ---------- */
+
+.detail-actionbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-md);
+  margin-bottom: var(--space-lg);
+}
+
+.detail-back {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-xs);
+  color: var(--on-surface-variant);
+  font-family: var(--font-body);
+  font-size: var(--label-lg-size);
+  line-height: var(--label-lg-line);
+  font-weight: var(--label-lg-weight);
+  letter-spacing: var(--label-lg-tracking);
+  transition: color 0.2s;
+}
+
+.detail-back .material-symbols-outlined {
+  font-size: 1.15rem;
+  transition: transform 0.2s;
+}
+
+.detail-back:hover {
+  color: var(--primary);
+}
+
+.detail-back:hover .material-symbols-outlined {
+  transform: translateX(-3px);
+}
+
+/* One grouped surface holding print, share, edit and delete, hairline-ruled
+   between the actions rather than spaced apart. */
+.detail-action-group {
+  display: flex;
+  align-items: stretch;
+  border-radius: var(--radius-lg);
+  background: var(--surface-container-low);
+}
+
+/* The group is not clipped, so a focus ring on an end action stays visible;
+   the two end actions carry the group's corners instead. */
+.detail-action:first-child {
+  border-top-left-radius: var(--radius-lg);
+  border-bottom-left-radius: var(--radius-lg);
+}
+
+.detail-action:last-child {
+  border-top-right-radius: var(--radius-lg);
+  border-bottom-right-radius: var(--radius-lg);
+}
+
+.detail-action {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-xs);
+  padding: var(--space-xs) var(--space-sm);
+  border: none;
+  background: transparent;
+  color: var(--on-surface-variant);
+  font-family: var(--font-body);
+  font-size: var(--label-lg-size);
+  line-height: var(--label-lg-line);
+  font-weight: var(--label-lg-weight);
+  letter-spacing: var(--label-lg-tracking);
+  cursor: pointer;
+  transition:
+    background-color 0.2s,
+    color 0.2s;
+}
+
+.detail-action + .detail-action {
+  border-left: 1px solid var(--surface-container-highest);
+}
+
+.detail-action .material-symbols-outlined {
+  font-size: 1.15rem;
+}
+
+.detail-action:hover {
+  background: var(--surface-container);
+  color: var(--primary);
+}
+
+.detail-action.is-danger:hover {
+  background: color-mix(in srgb, var(--error-container) 45%, transparent);
+  color: var(--error);
+}
+
+/* Below md the group is icons only. */
+.detail-action-label {
+  display: none;
 }
 
 @media (min-width: 768px) {
-  .detail-header {
-    grid-template-columns: 1.2fr 1fr;
+  .detail-action {
+    padding: var(--space-xs) var(--space-md);
   }
+
+  .detail-action-label {
+    display: inline;
+  }
+}
+
+/* ---------- Header ---------- */
+
+.detail-header {
+  margin-bottom: var(--space-xl);
+}
+
+.detail-chips {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-xs);
+  margin-bottom: var(--space-sm);
+}
+
+.detail-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: var(--space-3xs) var(--space-xs);
+  border-radius: var(--radius-xs);
+  background: var(--surface-container-low);
+  color: var(--on-surface-variant);
+  font-family: var(--font-body);
+  font-size: var(--label-sm-size);
+  line-height: var(--label-sm-line);
+  font-weight: var(--label-sm-weight);
+  letter-spacing: var(--label-sm-tracking);
+  text-transform: uppercase;
+}
+
+.detail-chip-separator {
+  color: var(--surface-container-highest);
+  font-size: var(--label-lg-size);
+  line-height: var(--label-lg-line);
 }
 
 .detail-title {
@@ -23,7 +158,8 @@
   line-height: var(--headline-display-mobile-line);
   font-weight: var(--headline-display-mobile-weight);
   letter-spacing: var(--headline-display-mobile-tracking);
-  margin: var(--space-2xs) 0 var(--space-xs);
+  color: var(--on-surface);
+  margin: 0;
 }
 
 @media (min-width: 768px) {
@@ -35,62 +171,198 @@
   }
 }
 
-.detail-meta {
+.detail-description {
+  font-family: var(--font-display);
+  font-size: var(--headline-md-size);
+  line-height: var(--headline-md-line);
+  font-weight: var(--headline-md-weight);
+  letter-spacing: var(--headline-md-tracking);
+  font-style: italic;
+  color: var(--secondary);
+  max-width: var(--column-reading-width);
+  margin: var(--space-sm) 0 0;
+}
+
+/* ---------- Stats strip ---------- */
+
+.detail-stats {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-md);
+  margin: var(--space-lg) 0 0;
+  padding: var(--space-md) var(--space-lg);
+  border-radius: var(--radius-md);
+  background: var(--surface-container-low);
+}
+
+@media (min-width: 768px) {
+  .detail-stats {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+.detail-stat-label {
+  font-family: var(--font-body);
+  font-size: var(--label-sm-size);
+  line-height: var(--label-sm-line);
+  font-weight: var(--label-sm-weight);
+  letter-spacing: var(--label-sm-tracking);
+  text-transform: uppercase;
+  color: var(--on-surface-variant);
+}
+
+.detail-stat-value {
+  margin: var(--space-2xs) 0 0;
+  font-family: var(--font-display);
+  font-size: var(--headline-sm-size);
+  line-height: var(--headline-sm-line);
+  font-weight: var(--headline-sm-weight);
+  letter-spacing: var(--headline-sm-tracking);
+  color: var(--on-surface);
+}
+
+/* The servings figure is the one the scaler acts on, so it is the accent. */
+.detail-stat-value.is-accent {
+  color: var(--primary);
+}
+
+/* ---------- Body: 5 / 7 twelve-column grid ---------- */
+
+.detail-body {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--gutter-mobile);
+}
+
+@media (min-width: 1024px) {
+  .detail-body {
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+    gap: var(--gutter-desktop);
+    align-items: start;
+  }
+
+  .detail-aside {
+    grid-column: span 5;
+    position: sticky;
+    /* Clears the shell's fixed navigation. */
+    top: calc(var(--space-3xl) + var(--space-md));
+  }
+
+  .detail-main {
+    grid-column: span 7;
+  }
+}
+
+.detail-panel {
+  padding: var(--space-lg);
+  border-radius: var(--radius-md);
+  background: var(--surface-container-low);
+}
+
+.detail-panel + .detail-panel {
+  margin-top: var(--space-md);
+}
+
+.detail-panel-header {
   display: flex;
   flex-wrap: wrap;
-  gap: var(--space-md);
-  color: var(--on-surface-variant);
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-sm);
+}
+
+.detail-panel-title {
+  font-family: var(--font-display);
+  font-size: var(--headline-md-size);
+  line-height: var(--headline-md-line);
+  font-weight: var(--headline-md-weight);
+  letter-spacing: var(--headline-md-tracking);
+  color: var(--on-surface);
+  margin: 0;
+}
+
+.detail-panel-hint {
+  margin: var(--space-xs) 0 var(--space-md);
+  font-family: var(--font-body);
   font-size: var(--body-sm-size);
   line-height: var(--body-sm-line);
-  margin: var(--space-xs) 0 var(--space-sm);
+  color: var(--on-surface-variant);
 }
 
-.detail-meta span {
+/* ---------- Servings scaler ---------- */
+
+.scaler {
   display: inline-flex;
   align-items: center;
   gap: var(--space-2xs);
+  padding: var(--space-3xs);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
 }
 
-.detail-meta .material-symbols-outlined {
-  font-size: 1.05rem;
-}
-
-.detail-actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-sm);
-  margin-top: var(--space-lg);
-}
-
-.detail-lead {
-  font-size: var(--body-lg-size);
-  line-height: var(--body-lg-line);
-  color: var(--on-surface-variant);
-  margin: 0 0 var(--space-xl);
-}
-
-/* Back link to the list. */
-.nav-link {
+.scaler-button {
   display: inline-flex;
   align-items: center;
-  gap: var(--space-2xs);
+  justify-content: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: transparent;
   color: var(--on-surface-variant);
+  cursor: pointer;
+  transition:
+    background-color 0.2s,
+    color 0.2s;
+}
+
+.scaler-button .material-symbols-outlined {
+  font-size: 1.1rem;
+}
+
+.scaler-button:hover:not(:disabled) {
+  background: var(--surface-container);
+  color: var(--primary);
+}
+
+.scaler-button:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+.scaler-value {
+  min-width: 5.5rem;
+  text-align: center;
+  font-family: var(--font-body);
   font-size: var(--label-lg-size);
   line-height: var(--label-lg-line);
   font-weight: var(--label-lg-weight);
   letter-spacing: var(--label-lg-tracking);
-  transition: color 0.2s;
+  font-variant-numeric: tabular-nums;
+  color: var(--on-surface);
 }
 
-.nav-link .material-symbols-outlined {
-  font-size: 1.1rem;
+.scaler-note {
+  margin: 0 0 var(--space-sm);
+  font-family: var(--font-body);
+  font-size: var(--body-sm-size);
+  line-height: var(--body-sm-line);
+  color: var(--on-surface-variant);
 }
 
-.nav-link:hover {
+.link-btn {
+  border: none;
+  background: none;
+  padding: 0;
+  font: inherit;
   color: var(--primary);
+  text-decoration: underline;
+  cursor: pointer;
 }
 
-/* ---------- Checkable ingredients ---------- */
+/* ---------- Checkable ingredients ----------
+   Each row is a real button, so the check-off works with the keyboard as well
+   as the mouse. The checked set is session state held in the page. */
 
 .ingredients-list {
   list-style: none;
@@ -103,82 +375,379 @@
   align-items: center;
   gap: var(--space-sm);
   width: 100%;
-  padding: var(--space-xs) var(--space-2xs);
+  padding: var(--space-xs) 0;
   border: none;
-  border-bottom: 1px solid color-mix(in srgb, var(--outline-variant) 25%, transparent);
+  border-bottom: 1px solid color-mix(in srgb, var(--outline-variant) 30%, transparent);
   background: transparent;
   color: var(--on-surface);
-  font-size: var(--body-md-size);
-  line-height: var(--body-md-line);
   text-align: left;
   cursor: pointer;
   transition: color 0.15s;
 }
 
-.ingredient-item:last-child {
+.ingredients-list li:last-child .ingredient-item {
   border-bottom: none;
 }
 
 .ingredient-box {
-  width: 1.25rem;
-  height: 1.25rem;
-  border-radius: var(--radius-xs);
-  border: 2px solid var(--secondary);
+  width: 1.15rem;
+  height: 1.15rem;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--outline);
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  transition: background-color 0.15s;
+  transition:
+    background-color 0.15s,
+    border-color 0.15s;
 }
 
 .ingredient-box .material-symbols-outlined {
-  font-size: 0.95rem;
-  color: var(--on-secondary);
+  font-size: 0.9rem;
+  color: var(--on-primary);
   opacity: 0;
   transition: opacity 0.15s;
 }
 
+.ingredient-name {
+  flex: 1;
+  font-family: var(--font-body);
+  font-size: var(--body-md-size);
+  line-height: var(--body-md-line);
+  font-weight: var(--body-md-weight);
+  letter-spacing: var(--body-md-tracking);
+  transition: opacity 0.15s;
+}
+
+.ingredient-quantity {
+  flex-shrink: 0;
+  text-align: right;
+  font-family: var(--font-body);
+  font-size: var(--label-lg-size);
+  line-height: var(--label-lg-line);
+  font-weight: var(--label-lg-weight);
+  letter-spacing: var(--label-lg-tracking);
+  font-variant-numeric: tabular-nums;
+  color: var(--secondary);
+}
+
 .ingredient-item.is-checked .ingredient-box {
-  background: var(--secondary);
+  background: var(--primary);
+  border-color: var(--primary);
 }
 
 .ingredient-item.is-checked .ingredient-box .material-symbols-outlined {
   opacity: 1;
 }
 
-.ingredient-item.is-checked .ingredient-text {
+.ingredient-item.is-checked .ingredient-name {
   opacity: 0.5;
   text-decoration: line-through;
 }
 
+.ingredient-item.is-checked .ingredient-quantity {
+  opacity: 0.5;
+}
+
+/* ---------- Notes ---------- */
+
+.notes-text {
+  white-space: pre-wrap;
+  margin: var(--space-sm) 0 0;
+  font-family: var(--font-body);
+  font-size: var(--body-md-size);
+  line-height: var(--body-md-line);
+  color: var(--on-surface);
+}
+
 /* ---------- Steps ---------- */
+
+.steps-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-md);
+  margin-bottom: var(--space-md);
+}
+
+.steps-title {
+  font-family: var(--font-display);
+  font-size: var(--headline-lg-mobile-size);
+  line-height: var(--headline-lg-mobile-line);
+  font-weight: var(--headline-lg-mobile-weight);
+  letter-spacing: var(--headline-lg-mobile-tracking);
+  color: var(--on-surface);
+  margin: 0;
+}
+
+@media (min-width: 768px) {
+  .steps-title {
+    font-size: var(--headline-lg-size);
+    line-height: var(--headline-lg-line);
+    font-weight: var(--headline-lg-weight);
+    letter-spacing: var(--headline-lg-tracking);
+  }
+}
+
+.steps-count {
+  flex-shrink: 0;
+  font-family: var(--font-body);
+  font-size: var(--label-sm-size);
+  line-height: var(--label-sm-line);
+  font-weight: var(--label-sm-weight);
+  letter-spacing: var(--label-sm-tracking);
+  text-transform: uppercase;
+  color: var(--secondary);
+}
 
 .steps-list {
   list-style: none;
   padding: 0;
   margin: 0;
-  counter-reset: step;
-}
-
-.steps-list li {
   display: grid;
-  grid-template-columns: auto 1fr;
   gap: var(--space-sm);
-  align-items: start;
-  padding: var(--space-xs) 0;
 }
 
-.step-text {
+.step-card {
+  padding: var(--space-md) var(--space-lg);
+  border-radius: var(--radius-sm);
+  background: var(--surface-container-low);
+}
+
+.step-card-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-sm);
+  margin-bottom: var(--space-xs);
+}
+
+.step-number {
+  font-family: var(--font-display);
+  font-size: var(--step-numeral-size);
+  line-height: var(--step-numeral-line);
+  font-weight: var(--step-numeral-weight);
+  letter-spacing: var(--step-numeral-tracking);
+  color: var(--primary);
+}
+
+.step-phase {
+  flex-shrink: 0;
+  font-family: var(--font-body);
+  font-size: var(--label-sm-size);
+  line-height: var(--label-sm-line);
+  font-weight: var(--label-sm-weight);
+  letter-spacing: var(--label-sm-tracking);
+  text-transform: uppercase;
+  color: var(--on-surface-variant);
+}
+
+.step-title {
+  margin: 0 0 var(--space-2xs);
+  font-family: var(--font-display);
+  font-size: var(--headline-sm-size);
+  line-height: var(--headline-sm-line);
+  font-weight: var(--headline-sm-weight);
+  letter-spacing: var(--headline-sm-tracking);
+  color: var(--on-surface);
+}
+
+.step-instruction {
+  margin: 0;
+  white-space: pre-wrap;
+  font-family: var(--font-body);
   font-size: var(--body-lg-size);
   line-height: var(--body-lg-line);
+  font-weight: var(--body-lg-weight);
+  letter-spacing: var(--body-lg-tracking);
   color: var(--on-surface);
-  padding-top: var(--space-3xs);
 }
 
-.notes-text {
-  white-space: pre-wrap;
-  margin: 0;
+/* ---------- Closing line ---------- */
+
+.detail-colophon {
+  margin: var(--space-2xl) 0 0;
+  padding-top: var(--space-lg);
+  border-top: 1px solid color-mix(in srgb, var(--outline-variant) 40%, transparent);
+  font-family: var(--font-body);
+  font-size: var(--label-sm-size);
+  line-height: var(--label-sm-line);
+  font-weight: var(--label-sm-weight);
+  letter-spacing: var(--label-sm-tracking);
+  text-transform: uppercase;
+  color: var(--on-surface-variant);
+  text-align: center;
+}
+
+/* ---------- Delete confirmation ----------
+   Deleting a recipe is permanent and cascades to its ingredients and steps, so
+   the dialog is not decoration: it is the safeguard. */
+
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-lg);
+  background: color-mix(in srgb, var(--inverse-surface) 55%, transparent);
+}
+
+.modal {
+  width: 100%;
+  max-width: 26rem;
+  padding: var(--space-xl);
+  border-radius: var(--radius-md);
+  background: var(--surface-container-lowest);
+  box-shadow: var(--shadow-xl);
+}
+
+.modal-title {
+  margin: 0 0 var(--space-sm);
+  font-family: var(--font-display);
+  font-size: var(--headline-md-size);
+  line-height: var(--headline-md-line);
+  font-weight: var(--headline-md-weight);
+  letter-spacing: var(--headline-md-tracking);
+  color: var(--on-surface);
+}
+
+.modal-body {
+  margin: 0 0 var(--space-lg);
+  font-family: var(--font-body);
   font-size: var(--body-md-size);
   line-height: var(--body-md-line);
-  color: var(--on-surface);
+  color: var(--on-surface-variant);
+}
+
+.modal-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: var(--space-sm);
+}
+
+/* ---------- Share feedback ---------- */
+
+.toast {
+  position: fixed;
+  left: 50%;
+  bottom: 6.5rem;
+  transform: translateX(-50%);
+  z-index: 110;
+  margin: 0;
+  padding: var(--space-xs) var(--space-md);
+  border-radius: var(--radius-lg);
+  background: var(--inverse-surface);
+  color: var(--inverse-on-surface);
+  font-family: var(--font-body);
+  font-size: var(--body-sm-size);
+  line-height: var(--body-sm-line);
+  box-shadow: var(--shadow-md);
+}
+
+/* ============================================================
+   Print
+   Paper is always light, carries no navigation and no controls, and shows the
+   recipe as written — never the cook's in-progress ticks.
+   ============================================================ */
+
+@media print {
+  :root,
+  .dark {
+    --background: #ffffff;
+    --surface: #ffffff;
+    --surface-bright: #ffffff;
+    --surface-container-lowest: #ffffff;
+    --surface-container-low: #ffffff;
+    --surface-container: #ffffff;
+    --surface-container-high: #ffffff;
+    --surface-container-highest: #ffffff;
+    --surface-variant: #ffffff;
+    --surface-dim: #ffffff;
+    --on-surface: #000000;
+    --on-surface-variant: #333333;
+    --outline: #666666;
+    --outline-variant: #999999;
+    --primary: #000000;
+    --secondary: #333333;
+    --primary-fixed-dim: #666666;
+  }
+
+  html,
+  body,
+  .app-shell,
+  .app-main {
+    background: #ffffff !important;
+    color: #000000 !important;
+    box-shadow: none !important;
+  }
+
+  .app-main {
+    max-width: none;
+    padding: 0;
+  }
+
+  /* No navigation, no buttons, no toasts — ingredients and steps only. */
+  .app-header,
+  .nav-cluster,
+  .bottom-nav,
+  .no-print,
+  button {
+    display: none !important;
+  }
+
+  .detail-stats,
+  .detail-panel,
+  .step-card,
+  .modal,
+  .detail-chip {
+    box-shadow: none !important;
+  }
+
+  /* The two columns become one, and nothing sticks to a sheet of paper. */
+  .detail-body {
+    display: block;
+  }
+
+  .detail-aside {
+    position: static;
+  }
+
+  .detail-panel {
+    padding: 0;
+    margin-bottom: var(--space-lg);
+  }
+
+  .step-card {
+    padding: var(--space-xs) 0;
+    break-inside: avoid;
+  }
+
+  .ingredients-list li {
+    break-inside: avoid;
+  }
+
+  /* The row is a button; its ingredient text has to survive the rule above,
+     and the session's ticks must not reach the paper. */
+  .ingredient-item {
+    display: flex !important;
+    padding-left: 0;
+  }
+
+  .ingredient-box {
+    display: none !important;
+  }
+
+  .ingredient-item.is-checked .ingredient-name,
+  .ingredient-item.is-checked .ingredient-quantity {
+    opacity: 1;
+    text-decoration: none;
+  }
+
+  a[href]::after {
+    content: '';
+  }
 }
