@@ -49,11 +49,11 @@ async function onCancel() {
 
 <template>
   <div class="form-page">
-    <header class="page-header">
-      <h1 class="display-lg">Editar Recepta</h1>
-      <p class="page-lead">
-        Afina el que calgui. En desar, la recepta es guarda sencera amb l’ordre
-        d’ingredients i passos que hi ha a la pantalla.
+    <header class="form-page-header">
+      <h1 class="headline-display">Editar Recepta</h1>
+      <p class="form-page-lead">
+        Afina el que calgui. En desar, la recepta es guarda sencera amb l’ordre d’ingredients i
+        passos que hi ha a la pantalla.
       </p>
     </header>
 

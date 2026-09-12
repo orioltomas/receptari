@@ -1,20 +1,145 @@
 /* ============================================================
    Receptari — add and edit form
-   Sections, fields, season picker, ingredient rows and steps.
+   The two-column registration layout: page header, the 7/5 split of primary
+   registration and classification, the ingredient ledger, the step cards and
+   the action bar. Tokens live in tokens.css; the shared primitives (buttons,
+   .input, .textarea, chips, states) live in base.css.
    ============================================================ */
 
 .form-page {
-  max-width: 56rem;
+  max-width: var(--journal-max-width);
   margin: 0 auto;
 }
+
+/* ---------- Page header ----------
+   Owned here rather than reused from the catalogue: the two pages head
+   differently and must be able to move apart. */
+
+.form-page-header {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2xs);
+  max-width: var(--column-reading-width);
+  margin-bottom: var(--space-2xl);
+}
+
+.form-page-lead {
+  font-family: var(--font-display);
+  font-size: var(--headline-md-size);
+  line-height: var(--headline-md-line);
+  font-weight: var(--headline-md-weight);
+  font-style: italic;
+  color: var(--on-surface-variant);
+  margin: 0;
+}
+
+/* ---------- Form skeleton ---------- */
+
+.recipe-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xl);
+}
+
+/* The 12-column split: 7 columns of primary registration beside 5 of
+   classification, stacked below `lg`. */
+.form-columns {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-lg);
+}
+
+@media (min-width: 1024px) {
+  .form-columns {
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+  }
+
+  .form-col-primary {
+    grid-column: span 7;
+  }
+
+  .form-col-classification {
+    grid-column: span 5;
+  }
+}
+
+/* ---------- Panels ----------
+   `.form-section` is the older name for the same panel. The recipe detail
+   page still applies it, so both names resolve to one rule until that page
+   moves its own sections into detail.css. */
+
+.form-panel,
+.form-section {
+  background: var(--surface-container-low);
+  border-radius: var(--radius-md);
+  padding: var(--space-lg);
+}
+
+@media (min-width: 768px) {
+  .form-panel,
+  .form-section {
+    padding: var(--space-xl);
+  }
+}
+
+.form-panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-lg);
+}
+
+.form-section {
+  margin-bottom: var(--space-lg);
+}
+
+/* Caption line at the head of a panel: the numbered section marker on the
+   left, an optional aside on the right. */
+.form-panel-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-xs);
+}
+
+.form-panel-caption {
+  font-family: var(--font-body);
+  font-size: var(--label-md-size);
+  line-height: var(--label-md-line);
+  font-weight: var(--label-md-weight);
+  letter-spacing: var(--label-md-tracking);
+  text-transform: uppercase;
+  color: var(--primary);
+}
+
+.form-panel-aside {
+  font-family: var(--font-body);
+  font-size: var(--label-sm-size);
+  line-height: var(--label-sm-line);
+  font-weight: var(--label-sm-weight);
+  letter-spacing: var(--label-sm-tracking);
+  color: var(--on-surface-variant);
+}
+
+.form-panel-heading {
+  font-family: var(--font-display);
+  font-size: var(--headline-md-size);
+  line-height: var(--headline-md-line);
+  font-weight: var(--headline-md-weight);
+  color: var(--on-surface);
+  margin: var(--space-3xs) 0 0;
+}
+
+/* ---------- Fields ---------- */
 
 .field {
   display: flex;
   flex-direction: column;
-  gap: var(--space-xs);
+  gap: var(--space-2xs);
 }
 
 .field-label {
+  font-family: var(--font-body);
   font-size: var(--label-lg-size);
   line-height: var(--label-lg-line);
   font-weight: var(--label-lg-weight);
@@ -28,144 +153,584 @@
   color: var(--on-surface-variant);
 }
 
-.icon-field {
-  position: relative;
+.field-hint.is-over {
+  color: var(--error);
+  font-weight: 600;
 }
 
-.icon-field > .material-symbols-outlined {
-  position: absolute;
-  left: var(--space-md);
-  top: 50%;
-  translate: 0 -50%;
-  color: var(--on-surface-variant);
-  pointer-events: none;
+.field-error {
+  margin: var(--space-2xs) 0 0;
+  font-size: var(--body-sm-size);
+  line-height: var(--body-sm-line);
+  font-weight: 500;
+  color: var(--error);
 }
 
-.icon-field .input {
-  padding-left: 3rem;
+/* Fields sitting inside a panel are one tone lighter than the panel. */
+.field-input,
+.field-textarea {
+  width: 100%;
+  background: var(--surface-container-lowest);
+  color: var(--on-surface);
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  padding: var(--space-sm) var(--space-md);
+  font-family: var(--font-body);
+  font-size: var(--body-md-size);
+  line-height: var(--body-md-line);
+  transition:
+    background-color 0.2s,
+    border-color 0.2s;
 }
 
-.form-grid {
+.field-textarea {
+  resize: vertical;
+}
+
+/* The title reads as a headline, as the design's leading field does. */
+.field-input--title {
+  font-family: var(--font-display);
+  font-size: var(--headline-sm-size);
+  line-height: var(--headline-sm-line);
+  font-weight: var(--headline-sm-weight);
+}
+
+.field-input::placeholder,
+.field-textarea::placeholder {
+  color: color-mix(in srgb, var(--on-surface-variant) 50%, transparent);
+  font-style: italic;
+}
+
+.field-input:focus,
+.field-textarea:focus {
+  outline: none;
+  background: var(--surface-bright);
+  border-color: var(--primary);
+}
+
+.field-input:focus-visible,
+.field-textarea:focus-visible {
+  outline: none;
+}
+
+/* ---------- Operating parameters ----------
+   Comensals, Preparació, Cocció and Dificultat: four small panels, 2-up on
+   phones and 4-up from `sm`. */
+
+.param-grid {
   display: grid;
-  gap: var(--space-md);
-  grid-template-columns: 1fr;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-sm);
 }
 
-@media (min-width: 768px) {
-  .form-grid {
-    grid-template-columns: repeat(3, 1fr);
+@media (min-width: 640px) {
+  .param-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
   }
 }
 
-.form-section {
-  background: var(--surface-container-low);
-  border: 1px solid color-mix(in srgb, var(--outline-variant) 25%, transparent);
-  border-radius: var(--radius-md);
-  padding: var(--space-lg);
-  margin-bottom: var(--space-lg);
-}
-
-.form-section .section-title {
-  margin-bottom: var(--space-md);
-}
-
-/* ---------- Season picker ---------- */
-
-.season-grid {
-  display: grid;
-  gap: var(--space-md);
-  grid-template-columns: repeat(2, 1fr);
-}
-
-@media (min-width: 768px) {
-  .season-grid {
-    grid-template-columns: repeat(4, 1fr);
-  }
-}
-
-.season-option {
+.param-cell {
   display: flex;
   flex-direction: column;
+  gap: var(--space-2xs);
+  background: var(--surface-container-lowest);
+  border-radius: var(--radius-sm);
+  padding: var(--space-sm);
+}
+
+.param-caption {
+  font-family: var(--font-body);
+  font-size: var(--label-sm-size);
+  line-height: var(--label-sm-line);
+  font-weight: var(--label-sm-weight);
+  letter-spacing: var(--label-sm-tracking);
+  text-transform: uppercase;
+  color: var(--on-surface-variant);
+}
+
+.param-stepper {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2xs);
+}
+
+.param-step-btn {
+  display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: var(--space-xs);
-  padding: var(--space-md);
+  width: 1.75rem;
+  height: 1.75rem;
+  flex: 0 0 auto;
+  border: none;
   border-radius: var(--radius-lg);
-  border: 2px solid var(--surface-container);
-  background: color-mix(in srgb, var(--surface-container) 50%, transparent);
+  background: var(--surface-container);
   color: var(--on-surface);
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.param-step-btn .material-symbols-outlined {
+  font-size: 16px;
+}
+
+.param-step-btn:hover {
+  background: var(--surface-container-high);
+}
+
+/* A number input, not a read-only display: servings is optional and must stay
+   clearable by typing, which a plain stepper would take away. */
+.param-value {
+  width: 100%;
+  min-width: 0;
+  border: none;
+  background: transparent;
+  color: var(--on-surface);
+  font-family: var(--font-display);
+  font-size: var(--headline-sm-size);
+  line-height: var(--headline-sm-line);
+  font-weight: var(--headline-sm-weight);
+  text-align: center;
+  padding: 0;
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+
+.param-value::-webkit-outer-spin-button,
+.param-value::-webkit-inner-spin-button {
+  appearance: none;
+  margin: 0;
+}
+
+.param-measure {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-3xs);
+}
+
+.param-measure .param-value {
+  width: 3rem;
+  text-align: left;
+}
+
+.param-suffix {
+  font-family: var(--font-body);
+  font-size: var(--label-sm-size);
+  line-height: var(--label-sm-line);
+  font-weight: var(--label-sm-weight);
+  letter-spacing: var(--label-sm-tracking);
+  color: var(--on-surface-variant);
+}
+
+/* A bare select, as the design draws it — no border, no chrome. */
+.param-select {
+  width: 100%;
+  border: none;
+  background: transparent;
+  color: var(--on-surface);
+  font-family: var(--font-body);
+  font-size: var(--label-lg-size);
+  line-height: var(--label-lg-line);
+  font-weight: var(--label-lg-weight);
+  letter-spacing: var(--label-lg-tracking);
+  padding: 0;
+  cursor: pointer;
+}
+
+/* ---------- Classification ---------- */
+
+.classification-field + .classification-field {
+  margin-top: var(--space-lg);
+}
+
+.classification-label {
+  display: block;
+  font-family: var(--font-body);
+  font-size: var(--label-sm-size);
+  line-height: var(--label-sm-line);
+  font-weight: var(--label-sm-weight);
+  letter-spacing: var(--label-sm-tracking);
+  text-transform: uppercase;
+  color: var(--on-surface-variant);
+  margin-bottom: var(--space-xs);
+}
+
+.season-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2xs);
+}
+
+/* 12px, the largest radius in the design — a pill, never a capsule. */
+.season-pill {
+  border: none;
+  border-radius: var(--radius-lg);
+  padding: var(--space-2xs) var(--space-md);
+  background: var(--surface-container-highest);
+  color: var(--on-surface-variant);
+  font-family: var(--font-body);
   font-size: var(--label-lg-size);
   line-height: var(--label-lg-line);
   font-weight: var(--label-lg-weight);
   letter-spacing: var(--label-lg-tracking);
   cursor: pointer;
-  transition: background-color 0.2s, border-color 0.2s;
+  transition:
+    background-color 0.2s,
+    color 0.2s;
 }
 
-.season-option .material-symbols-outlined {
-  font-size: 1.9rem;
-  transition: transform 0.2s;
+.season-pill:hover {
+  color: var(--on-surface);
 }
 
-.season-option:hover {
-  background: var(--surface-container-high);
+.season-pill.is-selected {
+  background: var(--primary);
+  color: var(--on-primary);
 }
 
-.season-option:hover .material-symbols-outlined {
-  transform: scale(1.1);
+.category-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-xs);
 }
 
-.season-option.is-selected {
-  border-color: var(--primary);
-  background: color-mix(in srgb, var(--primary-fixed) 30%, transparent);
+.category-option {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  background: var(--surface-container-lowest);
+  border-radius: var(--radius-sm);
+  padding: var(--space-xs);
+  cursor: pointer;
+  transition: background-color 0.2s;
 }
 
-.season-option.tone-spring .material-symbols-outlined {
-  color: var(--secondary);
+.category-option:hover {
+  background: var(--surface-container);
 }
 
-/* The blue-green tone inverts between themes on its own, so the dark mode
-   override this rule used to need is gone. */
-.season-option.tone-summer .material-symbols-outlined {
-  color: var(--tertiary);
+.category-option input {
+  width: 1rem;
+  height: 1rem;
+  flex: 0 0 auto;
+  accent-color: var(--primary);
+  cursor: pointer;
 }
 
-.season-option.tone-autumn .material-symbols-outlined {
-  color: var(--primary);
+.category-option-label {
+  font-family: var(--font-body);
+  font-size: var(--body-sm-size);
+  line-height: var(--body-sm-line);
+  color: var(--on-surface);
 }
 
-.season-option.tone-winter .material-symbols-outlined {
+.category-option.is-selected .category-option-label {
+  font-weight: 500;
+}
+
+/* ---------- Ingredient ledger ---------- */
+
+.ledger-head {
+  display: none;
+  gap: var(--space-sm);
+  padding: 0 var(--space-xs);
+  font-family: var(--font-body);
+  font-size: var(--label-sm-size);
+  line-height: var(--label-sm-line);
+  font-weight: var(--label-sm-weight);
+  letter-spacing: var(--label-sm-tracking);
+  text-transform: uppercase;
   color: var(--on-surface-variant);
 }
 
-/* ---------- Ingredient rows ---------- */
+.ledger-rows {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+}
 
 .ingredient-row {
-  display: flex;
+  display: grid;
+  grid-template-columns: 1fr;
   gap: var(--space-xs);
-  align-items: center;
-  margin-bottom: var(--space-sm);
+  background: var(--surface-container-lowest);
+  border-radius: var(--radius-sm);
+  padding: var(--space-sm);
 }
 
-.ingredient-qty {
-  flex: 0 0 32%;
+.col-remove {
+  display: flex;
+  justify-content: flex-end;
+}
+
+/* The 12-column table only exists from `sm` up; below that the row stacks
+   into one column and the spans must not create implicit tracks. */
+@media (min-width: 640px) {
+  .ledger-head {
+    display: grid;
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+  }
+
+  .ingredient-row {
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+    gap: var(--space-sm);
+    align-items: center;
+  }
+
+  .col-quantity {
+    grid-column: span 3;
+  }
+
+  .col-unit {
+    grid-column: span 3;
+  }
+
+  .col-name {
+    grid-column: span 5;
+  }
+
+  .col-remove {
+    grid-column: span 1;
+  }
+}
+
+/* Below `sm` the table stacks, so each field carries its own label. */
+.cell-label {
+  display: block;
+  font-family: var(--font-body);
+  font-size: var(--label-sm-size);
+  line-height: var(--label-sm-line);
+  font-weight: var(--label-sm-weight);
+  letter-spacing: var(--label-sm-tracking);
+  color: var(--on-surface-variant);
+  margin-bottom: var(--space-3xs);
+}
+
+@media (min-width: 640px) {
+  .cell-label {
+    display: none;
+  }
+}
+
+.cell-input {
+  width: 100%;
   min-width: 0;
+  background: var(--surface-container-low);
+  color: var(--on-surface);
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  padding: var(--space-xs) var(--space-sm);
+  font-family: var(--font-body);
+  font-size: var(--label-lg-size);
+  line-height: var(--label-lg-line);
+  font-weight: var(--label-lg-weight);
+  letter-spacing: var(--label-lg-tracking);
+  transition:
+    background-color 0.2s,
+    border-color 0.2s;
 }
 
-.ingredient-name {
+/* The ingredient name is prose, not a measurement. */
+.cell-input--name {
+  font-size: var(--body-md-size);
+  line-height: var(--body-md-line);
+  font-weight: var(--body-md-weight);
+  letter-spacing: var(--body-md-tracking);
+}
+
+.cell-input::placeholder {
+  color: color-mix(in srgb, var(--on-surface-variant) 50%, transparent);
+}
+
+.cell-input:focus {
+  outline: none;
+  background: var(--surface-container);
+  border-color: var(--primary);
+}
+
+.cell-input:focus-visible {
+  outline: none;
+}
+
+.row-error {
+  margin: var(--space-2xs) 0 0;
+  font-size: var(--body-sm-size);
+  line-height: var(--body-sm-line);
+  font-weight: 500;
+  color: var(--error);
+}
+
+@media (min-width: 640px) {
+  .row-error {
+    grid-column: span 12;
+  }
+}
+
+/* ---------- Step cards ---------- */
+
+.step-cards {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+.step-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+  background: var(--surface-container-lowest);
+  border-radius: var(--radius-md);
+  padding: var(--space-md);
+}
+
+@media (min-width: 768px) {
+  .step-card {
+    padding: var(--space-lg);
+  }
+}
+
+.step-card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-xs);
+}
+
+.step-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  flex: 0 0 auto;
+  border-radius: var(--radius-lg);
+  background: var(--primary);
+  color: var(--on-primary);
+  font-family: var(--font-display);
+  font-size: var(--step-numeral-size);
+  line-height: var(--step-numeral-line);
+  font-weight: var(--step-numeral-weight);
+  letter-spacing: var(--step-numeral-tracking);
+}
+
+.step-heading {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
   flex: 1;
   min-width: 0;
 }
 
+.step-title-input {
+  flex: 1;
+  min-width: 0;
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid transparent;
+  color: var(--on-surface);
+  font-family: var(--font-body);
+  font-size: var(--label-lg-size);
+  line-height: var(--label-lg-line);
+  font-weight: 500;
+  letter-spacing: var(--label-lg-tracking);
+  padding: var(--space-3xs) 0;
+}
+
+.step-title-input::placeholder {
+  color: color-mix(in srgb, var(--on-surface-variant) 50%, transparent);
+  font-style: italic;
+}
+
+.step-title-input:focus {
+  outline: none;
+  border-bottom-color: var(--primary);
+}
+
+.step-title-input:focus-visible {
+  outline: none;
+}
+
+.step-duration {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-3xs);
+  flex: 0 0 auto;
+}
+
+.step-duration input {
+  width: 3.25rem;
+  border: none;
+  background: transparent;
+  color: var(--on-surface);
+  font-family: var(--font-body);
+  font-size: var(--label-lg-size);
+  line-height: var(--label-lg-line);
+  font-weight: var(--label-lg-weight);
+  letter-spacing: var(--label-lg-tracking);
+  text-align: right;
+  padding: 0;
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+
+.step-duration input::-webkit-outer-spin-button,
+.step-duration input::-webkit-inner-spin-button {
+  appearance: none;
+  margin: 0;
+}
+
+.step-instruction {
+  width: 100%;
+  background: var(--surface-container-low);
+  color: var(--on-surface);
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  padding: var(--space-md);
+  font-family: var(--font-body);
+  font-size: var(--body-lg-size);
+  line-height: var(--body-lg-line);
+  font-weight: var(--body-lg-weight);
+  resize: vertical;
+  transition:
+    background-color 0.2s,
+    border-color 0.2s;
+}
+
+.step-instruction::placeholder {
+  color: color-mix(in srgb, var(--on-surface-variant) 50%, transparent);
+  font-style: italic;
+}
+
+.step-instruction:focus {
+  outline: none;
+  background: var(--surface-container);
+  border-color: var(--primary);
+}
+
+.step-instruction:focus-visible {
+  outline: none;
+}
+
+.step-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3xs);
+  flex: 0 0 auto;
+}
+
+/* ---------- Add row ---------- */
+
 .add-row-btn {
+  align-self: flex-start;
   display: inline-flex;
   align-items: center;
-  gap: var(--space-xs);
+  gap: var(--space-2xs);
   padding: var(--space-xs) var(--space-md);
   border-radius: var(--radius-sm);
   border: none;
-  background: transparent;
-  color: var(--secondary);
+  background: var(--surface-container);
+  color: var(--on-surface);
+  font-family: var(--font-body);
   font-size: var(--label-lg-size);
   line-height: var(--label-lg-line);
   font-weight: var(--label-lg-weight);
@@ -174,51 +739,65 @@
   transition: background-color 0.2s;
 }
 
+.add-row-btn .material-symbols-outlined {
+  font-size: 18px;
+  color: var(--primary);
+}
+
 .add-row-btn:hover {
-  background: color-mix(in srgb, var(--secondary-container) 50%, transparent);
+  background: var(--surface-container-highest);
 }
 
-/* ---------- Steps ---------- */
+/* ---------- Draft notices and actions ---------- */
 
-.step-row {
-  display: grid;
-  grid-template-columns: auto 1fr auto;
-  gap: var(--space-sm);
-  align-items: start;
-  margin-bottom: var(--space-sm);
-}
-
-.step-num {
-  width: 2rem;
-  height: 2rem;
-  border-radius: var(--radius-sm);
-  background: var(--primary);
-  color: var(--on-primary);
+.draft-note,
+.draft-footer {
   display: flex;
   align-items: center;
-  justify-content: center;
-  font-family: var(--font-display);
-  font-size: var(--step-numeral-size);
-  line-height: var(--step-numeral-line);
-  font-weight: var(--step-numeral-weight);
-  letter-spacing: var(--step-numeral-tracking);
-  flex-shrink: 0;
-  margin-top: var(--space-2xs);
+  gap: var(--space-2xs);
+  margin: 0;
+  font-family: var(--font-body);
+  font-size: var(--label-sm-size);
+  line-height: var(--label-sm-line);
+  font-weight: var(--label-sm-weight);
+  letter-spacing: var(--label-sm-tracking);
+  text-transform: uppercase;
+  color: var(--on-surface-variant);
 }
 
-.step-actions {
-  display: flex;
-  gap: var(--space-3xs);
-  margin-top: var(--space-3xs);
+.draft-note {
+  text-transform: none;
+  font-size: var(--body-sm-size);
+  line-height: var(--body-sm-line);
+  font-weight: var(--body-sm-weight);
+  letter-spacing: var(--body-sm-tracking);
 }
 
-/* ---------- Form actions ---------- */
+.draft-note .material-symbols-outlined,
+.draft-footer .material-symbols-outlined {
+  font-size: 18px;
+}
 
 .actions-row {
   display: flex;
-  flex-wrap: wrap;
+  flex-direction: column;
+  align-items: stretch;
   gap: var(--space-md);
+  padding-top: var(--space-md);
+}
+
+.actions-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
   justify-content: flex-end;
-  padding-top: var(--space-xl);
-  border-top: 1px solid color-mix(in srgb, var(--outline-variant) 30%, transparent);
+  gap: var(--space-md);
+}
+
+@media (min-width: 640px) {
+  .actions-row {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+  }
 }
