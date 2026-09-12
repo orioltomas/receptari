@@ -30,36 +30,54 @@ const navItems = [
 
 <template>
   <div class="app-shell">
-    <nav class="nav-cluster" aria-label="Navegació principal">
-      <NuxtLink
-        v-for="item in navItems"
-        :key="item.to"
-        :to="item.to"
-        class="nav-cluster-link"
-        exact-active-class="is-active"
-        :aria-label="item.label"
-        :title="item.label"
-      >
-        <span class="material-symbols-outlined">{{ item.icon }}</span>
-      </NuxtLink>
+    <header class="app-header">
+      <div class="app-header-inner">
+        <NuxtLink
+          to="/"
+          class="app-wordmark headline-md"
+          aria-label="Receptari Digital, anar a l'inici"
+          title="Receptari Digital"
+        >
+          Receptari Digital
+        </NuxtLink>
 
-      <span class="nav-divider" aria-hidden="true"></span>
+        <div class="app-header-end">
+          <!-- Hidden below sm, where the floating bottom pill takes over. -->
+          <nav class="header-nav" aria-label="Navegació principal">
+            <NuxtLink
+              v-for="item in navItems"
+              :key="item.to"
+              :to="item.to"
+              class="header-nav-link label-lg"
+              exact-active-class="is-active"
+              :aria-label="item.label"
+              :title="item.label"
+            >
+              {{ item.label }}
+            </NuxtLink>
+          </nav>
 
-      <button
-        class="nav-cluster-link"
-        type="button"
-        :aria-label="isDark ? 'Canviar a mode clar' : 'Canviar a mode fosc'"
-        :title="isDark ? 'Mode clar' : 'Mode fosc'"
-        @click="toggleTheme"
-      >
-        <span class="material-symbols-outlined">{{ isDark ? 'light_mode' : 'dark_mode' }}</span>
-      </button>
-    </nav>
+          <button
+            class="header-theme-toggle"
+            type="button"
+            :aria-label="isDark ? 'Canviar a mode clar' : 'Canviar a mode fosc'"
+            :title="isDark ? 'Mode clar' : 'Mode fosc'"
+            @click="toggleTheme"
+          >
+            <span class="material-symbols-outlined" aria-hidden="true">{{
+              isDark ? 'light_mode' : 'dark_mode'
+            }}</span>
+          </button>
+        </div>
+      </div>
+    </header>
 
     <main class="app-main">
       <NuxtPage />
     </main>
 
+    <!-- The design shows no navigation below sm. Following that literally would
+         leave phones with no way to reach Afegir, so the floating pill stays. -->
     <nav class="bottom-nav" aria-label="Navegació principal mòbil">
       <div class="bottom-nav-pill">
         <NuxtLink
@@ -71,7 +89,7 @@ const navItems = [
           :aria-label="item.label"
           :title="item.label"
         >
-          <span class="material-symbols-outlined">{{ item.icon }}</span>
+          <span class="material-symbols-outlined" aria-hidden="true">{{ item.icon }}</span>
         </NuxtLink>
 
         <span class="nav-divider" aria-hidden="true"></span>
@@ -83,7 +101,9 @@ const navItems = [
           :title="isDark ? 'Mode clar' : 'Mode fosc'"
           @click="toggleTheme"
         >
-          <span class="material-symbols-outlined">{{ isDark ? 'light_mode' : 'dark_mode' }}</span>
+          <span class="material-symbols-outlined" aria-hidden="true">{{
+            isDark ? 'light_mode' : 'dark_mode'
+          }}</span>
         </button>
       </div>
     </nav>
